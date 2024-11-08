@@ -8,9 +8,9 @@ export class AuthAppleLoginDto {
 
   @Allow()
   @ApiPropertyOptional()
-  firstName?: string;
+  first_name?: string;
 
   @Allow()
   @ApiPropertyOptional()
-  lastName?: string;
+  last_name?: string;
 }

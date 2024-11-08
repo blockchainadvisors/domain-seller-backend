@@ -20,7 +20,7 @@ export class SessionRelationalRepository implements SessionRepository {
   async findById(id: Session['id']): Promise<NullableType<Session>> {
     const entity = await this.sessionRepository.findOne({
       where: {
-        id: Number(id),
+        id: id,
       },
     });
 
@@ -37,11 +37,11 @@ export class SessionRelationalRepository implements SessionRepository {
   async update(
     id: Session['id'],
     payload: Partial<
-      Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
+      Omit<Session, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>
     >,
   ): Promise<Session | null> {
     const entity = await this.sessionRepository.findOne({
-      where: { id: Number(id) },
+      where: { id: id },
     });
 
     if (!entity) {
@@ -62,14 +62,14 @@ export class SessionRelationalRepository implements SessionRepository {
 
   async deleteById(id: Session['id']): Promise<void> {
     await this.sessionRepository.softDelete({
-      id: Number(id),
+      id: id,
     });
   }
 
   async deleteByUserId(conditions: { userId: User['id'] }): Promise<void> {
     await this.sessionRepository.softDelete({
       user: {
-        id: Number(conditions.userId),
+        id: conditions.userId,
       },
     });
   }
@@ -80,9 +80,9 @@ export class SessionRelationalRepository implements SessionRepository {
   }): Promise<void> {
     await this.sessionRepository.softDelete({
       user: {
-        id: Number(conditions.userId),
+        id: conditions.userId,
       },
-      id: Not(Number(conditions.excludeSessionId)),
+      id: Not(conditions.excludeSessionId),
     });
   }
 }

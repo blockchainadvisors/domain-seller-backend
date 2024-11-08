@@ -22,7 +22,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   provider?: string;
 
-  socialId?: string | null;
+  social_id?: string | null;
 
   @ApiPropertyOptional({ example: 'John', type: String })
   @IsOptional()

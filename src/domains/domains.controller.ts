@@ -1,0 +1,106 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
+import { DomainsService } from './domains.service';
+import { CreateDomainDto } from './dto/create-domain.dto';
+import { UpdateDomainDto } from './dto/update-domain.dto';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Domain } from './domain/domain';
+import {
+  InfinityPaginationResponse,
+  InfinityPaginationResponseDto,
+} from '../utils/dto/infinity-pagination-response.dto';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { FindAllDomainsDto } from './dto/find-all-domains.dto';
+
+@ApiTags('Domains')
+@ApiBearerAuth()
+// @UseGuards(AuthGuard('jwt'))
+@Controller({
+  path: 'domains',
+  version: '1',
+})
+export class DomainsController {
+  constructor(private readonly domainsService: DomainsService) {}
+
+  @Post()
+  @ApiCreatedResponse({
+    type: Domain,
+  })
+  create(@Body() createDomainDto: CreateDomainDto) {
+    return this.domainsService.create(createDomainDto);
+  }
+
+  @Get()
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Domain),
+  })
+  async findAll(
+    @Query() query: FindAllDomainsDto,
+  ): Promise<InfinityPaginationResponseDto<Domain>> {
+    const page = query?.page ?? 1;
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return infinityPagination(
+      await this.domainsService.findAllWithPagination({
+        paginationOptions: {
+          page,
+          limit,
+        },
+      }),
+      { page, limit },
+    );
+  }
+
+  @Get(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Domain,
+  })
+  findById(@Param('id') id: string) {
+    return this.domainsService.findById(id);
+  }
+
+  @Patch(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Domain,
+  })
+  update(@Param('id') id: string, @Body() updateDomainDto: UpdateDomainDto) {
+    return this.domainsService.update(id, updateDomainDto);
+  }
+
+  @Delete(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  remove(@Param('id') id: string) {
+    return this.domainsService.remove(id);
+  }
+}

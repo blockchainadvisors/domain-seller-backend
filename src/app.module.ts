@@ -27,26 +27,31 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { MongooseConfigService } from './database/mongoose-config.service';
-import { DatabaseConfig } from './database/config/database-config.type';
 
-// <database-block>
-const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
-  .isDocumentDatabase
-  ? MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
-    })
-  : TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options: DataSourceOptions) => {
-        return new DataSource(options).initialize();
-      },
-    });
-// </database-block>
+const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
+  useClass: TypeOrmConfigService,
+  dataSourceFactory: async (options: DataSourceOptions) => {
+    return new DataSource(options).initialize();
+  },
+});
+
+import { DomainsModule } from './domains/domains.module';
+
+import { AuctionsModule } from './auctions/auctions.module';
+
+import { BidsModule } from './bids/bids.module';
+
+import { PaymentsModule } from './payments/payments.module';
+
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
+    NotificationsModule,
+    PaymentsModule,
+    BidsModule,
+    AuctionsModule,
+    DomainsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [

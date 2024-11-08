@@ -121,8 +121,8 @@ export class AuthService {
     }
 
     if (socialData.id) {
-      user = await this.usersService.findBySocialIdAndProvider({
-        socialId: socialData.id,
+      user = await this.usersService.findBysocial_idAndProvider({
+        social_id: socialData.id,
         provider: authProvider,
       });
     }
@@ -144,9 +144,9 @@ export class AuthService {
 
       user = await this.usersService.create({
         email: socialEmail ?? null,
-        firstName: socialData.firstName ?? null,
-        lastName: socialData.lastName ?? null,
-        socialId: socialData.id,
+        first_name: socialData.first_name ?? null,
+        last_name: socialData.last_name ?? null,
+        social_id: socialData.id,
         provider: authProvider,
         role,
         status,

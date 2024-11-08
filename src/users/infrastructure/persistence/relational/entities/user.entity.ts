@@ -21,11 +21,9 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
   name: 'user',
 })
 export class UserEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  // For "string | null" we need to use String type.
-  // More info: https://github.com/typeorm/typeorm/issues/2567
   @Column({ type: String, unique: true, nullable: true })
   email: string | null;
 
@@ -37,15 +35,15 @@ export class UserEntity extends EntityRelationalHelper {
 
   @Index()
   @Column({ type: String, nullable: true })
-  socialId?: string | null;
+  social_id?: string | null;
 
   @Index()
   @Column({ type: String, nullable: true })
-  firstName: string | null;
+  first_name: string | null;
 
   @Index()
   @Column({ type: String, nullable: true })
-  lastName: string | null;
+  last_name: string | null;
 
   @OneToOne(() => FileEntity, {
     eager: true,
@@ -63,12 +61,12 @@ export class UserEntity extends EntityRelationalHelper {
   })
   status?: StatusEntity;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  created_at: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updated_at: Date;
 
-  @DeleteDateColumn()
-  deletedAt: Date;
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deleted_at: Date;
 }

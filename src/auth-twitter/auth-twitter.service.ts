@@ -36,7 +36,7 @@ export class AuthTwitterService {
     return {
       id: data.id?.toString(),
       email: data.email,
-      firstName: data.name,
+      first_name: data.name,
     };
   }
 }

@@ -38,8 +38,8 @@ export class AuthFacebookService {
     return {
       id: data.id,
       email: data.email,
-      firstName: data.first_name,
-      lastName: data.last_name,
+      first_name: data.first_name,
+      last_name: data.last_name,
     };
   }
 }

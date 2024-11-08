@@ -116,15 +116,15 @@ export class UsersService {
     return this.usersRepository.create({
       // Do not remove comment below.
       // <creating-property-payload />
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
+      first_name: createUserDto.first_name,
+      last_name: createUserDto.last_name,
       email: email,
       password: password,
       photo: photo,
       role: role,
       status: status,
       provider: createUserDto.provider ?? AuthProvidersEnum.email,
-      socialId: createUserDto.socialId,
+      social_id: createUserDto.social_id,
     });
   }
 
@@ -156,15 +156,15 @@ export class UsersService {
     return this.usersRepository.findByEmail(email);
   }
 
-  findBySocialIdAndProvider({
-    socialId,
+  findBysocial_idAndProvider({
+    social_id,
     provider,
   }: {
-    socialId: User['socialId'];
+    social_id: User['social_id'];
     provider: User['provider'];
   }): Promise<NullableType<User>> {
-    return this.usersRepository.findBySocialIdAndProvider({
-      socialId,
+    return this.usersRepository.findBysocial_idAndProvider({
+      social_id,
       provider,
     });
   }
@@ -270,15 +270,15 @@ export class UsersService {
     return this.usersRepository.update(id, {
       // Do not remove comment below.
       // <updating-property-payload />
-      firstName: updateUserDto.firstName,
-      lastName: updateUserDto.lastName,
+      first_name: updateUserDto.first_name,
+      last_name: updateUserDto.last_name,
       email,
       password,
       photo,
       role,
       status,
       provider: updateUserDto.provider,
-      socialId: updateUserDto.socialId,
+      social_id: updateUserDto.social_id,
     });
   }
 

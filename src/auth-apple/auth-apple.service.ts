@@ -19,8 +19,8 @@ export class AuthAppleService {
     return {
       id: data.sub,
       email: data.email,
-      firstName: loginDto.firstName,
-      lastName: loginDto.lastName,
+      first_name: loginDto.first_name,
+      last_name: loginDto.last_name,
     };
   }
 }
