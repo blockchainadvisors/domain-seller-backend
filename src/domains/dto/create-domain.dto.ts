@@ -3,6 +3,7 @@ import {
 
   IsString,
   IsOptional,
+  IsNotEmpty,
 } from 'class-validator';
 
 import {
@@ -28,6 +29,7 @@ export class CreateDomainDto {
     type: () => String,
   })
   @IsString()
+  @IsNotEmpty()
   url: string;
 
   // Don't forget to use the class-validator decorators in the DTO properties.

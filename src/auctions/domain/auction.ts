@@ -35,6 +35,12 @@ export class Auction {
   domain_id: Domain;
 
   @ApiProperty({
+    type: () => String,
+    nullable: false,
+  })
+  status?: string;
+
+  @ApiProperty({
     type: String,
   })
   id: string;

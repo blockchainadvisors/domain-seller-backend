@@ -78,4 +78,14 @@ export class DomainsService {
   remove(id: Domain['id']) {
     return this.domainRepository.remove(id);
   }
+
+  async updateStatus(domainId: string, status: string) {
+    await this.domainRepository.update(domainId, { status });
+  }
+
+  async updateCurrentHighestBid(domainId: string, amount: number) {
+    await this.domainRepository.update(domainId, {
+      current_highest_bid: amount,
+    });
+  }
 }

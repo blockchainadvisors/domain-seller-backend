@@ -4,6 +4,7 @@ import { Domain } from '../domains/domain/domain';
 import {
   BadRequestException,
   HttpStatus,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
@@ -63,7 +64,7 @@ export class AuctionsService {
     // Update the domain status to 'AUCTION_PENDING'
     domain.status = 'AUCTION_PENDING';
     await this.domainService.update(domain.id, domain);
-
+    const status = 'DRAFT';
     // Create the auction
     return this.auctionRepository.create({
       min_increment: createAuctionDto.min_increment,
@@ -71,6 +72,7 @@ export class AuctionsService {
       end_time: createAuctionDto.end_time,
       start_time: createAuctionDto.start_time,
       domain_id: domain,
+      status,
     });
   }
 
@@ -95,16 +97,53 @@ export class AuctionsService {
     return this.auctionRepository.findByIds(ids);
   }
 
-  async update(
-    id: Auction['id'],
+  async update(id: Auction['id'], updateAuctionDto: UpdateAuctionDto) {
+    // Fetch the existing auction
+    const auction = await this.auctionRepository.findById(id);
 
-    updateAuctionDto: UpdateAuctionDto,
-  ) {
-    // Do not remove comment below.
-    // <updating-property />
+    if (!auction) {
+      throw new NotFoundException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'Auction not found',
+      });
+    }
 
+    const currentDate = new Date();
+
+    // Check if the auction has ended
+    if (currentDate >= auction.end_time) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Cannot modify an auction that has already ended',
+      });
+    }
+
+    // If the auction has started, restrict some fields
+    if (currentDate >= auction.start_time) {
+      // Cannot modify start_time and reserve_price after auction starts
+      if (
+        updateAuctionDto.start_time &&
+        updateAuctionDto.start_time !== auction.start_time
+      ) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Cannot modify start_time after the auction has started',
+        });
+      }
+
+      if (
+        updateAuctionDto.reserve_price &&
+        updateAuctionDto.reserve_price !== auction.reserve_price
+      ) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Cannot modify reserve_price after the auction has started',
+        });
+      }
+    }
+
+    // Handle domain_id update if provided
     let domain_id: Domain | undefined = undefined;
-
     if (updateAuctionDto.domain_id) {
       const domain_idObject = await this.domainService.findById(
         updateAuctionDto.domain_id,
@@ -120,18 +159,15 @@ export class AuctionsService {
       domain_id = domain_idObject;
     }
 
+    // Proceed with updating the auction
     return this.auctionRepository.update(id, {
-      // Do not remove comment below.
-      // <updating-property-payload />
-      min_increment: updateAuctionDto.min_increment,
-
-      reserve_price: updateAuctionDto.reserve_price,
-
-      end_time: updateAuctionDto.end_time,
-
-      start_time: updateAuctionDto.start_time,
-
-      domain_id,
+      min_increment:
+        updateAuctionDto.min_increment || Number(auction.min_increment),
+      reserve_price:
+        updateAuctionDto.reserve_price || Number(auction.reserve_price),
+      end_time: updateAuctionDto.end_time || auction.end_time,
+      start_time: updateAuctionDto.start_time || auction.start_time,
+      domain_id: domain_id || auction.domain_id,
     });
   }
 

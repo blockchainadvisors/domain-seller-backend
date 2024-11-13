@@ -21,8 +21,7 @@ export class BidEntity extends EntityRelationalHelper {
   @Column({
     nullable: false,
     type: 'decimal',
-    precision: 18, // Allows larger values
-    scale: 2, // Suitable for two decimal places (currency)
+    precision: 18,
   })
   amount: number;
 

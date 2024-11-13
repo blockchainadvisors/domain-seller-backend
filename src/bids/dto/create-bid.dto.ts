@@ -1,18 +1,6 @@
-import { UserDto } from '../../users/dto/user.dto';
-
-import { DomainDto } from '../../domains/dto/domain.dto';
-
-import { AuctionDto } from '../../auctions/dto/auction.dto';
-
-import { Type } from 'class-transformer';
-
 import { ApiProperty } from '@nestjs/swagger';
 
-import {
-  // decorators here
-
-  IsNumber,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateBidDto {
   @ApiProperty({
@@ -22,15 +10,27 @@ export class CreateBidDto {
   @IsNumber()
   amount: number;
 
-  @ApiProperty({ type: UserDto })
-  @Type(() => UserDto)
-  user_id: UserDto;
+  @ApiProperty({
+    required: true,
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  user_id: string;
 
-  @ApiProperty({ type: DomainDto })
-  @Type(() => DomainDto)
-  domain_id: DomainDto;
+  @ApiProperty({
+    required: true,
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  domain_id: string;
 
-  @ApiProperty({ type: AuctionDto })
-  @Type(() => AuctionDto)
-  auction_id: AuctionDto;
+  @ApiProperty({
+    required: true,
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  auction_id: string;
 }

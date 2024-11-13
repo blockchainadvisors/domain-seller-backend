@@ -68,6 +68,10 @@ Belongs to the [bc boilerplates](https://bcboilerplates.com/) ecosystem
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
+<!-- 1. npm i
+2. run migration
+3. run seeding -->
+
 ## Support
 
 If you seek consulting, support, or wish to collaborate, please contact us via [boilerplates@brocoders.com](mailto:boilerplates@brocoders.com). For any inquiries regarding boilerplates, feel free to ask on [GitHub Discussions](https://github.com/brocoders/nestjs-boilerplate/discussions) or [Discord](https://discord.com/channels/520622812742811698/1197293125434093701).

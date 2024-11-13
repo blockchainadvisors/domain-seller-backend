@@ -1,3 +1,4 @@
+import { Auction } from '../../../auctions/domain/auction';
 import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
@@ -24,4 +25,6 @@ export abstract class BidRepository {
   ): Promise<Bid | null>;
 
   abstract remove(id: Bid['id']): Promise<void>;
+
+  abstract findHighestBidder(id: Auction['id']): Promise<NullableType<Bid>>;
 }

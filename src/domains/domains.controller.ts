@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { DomainsService } from './domains.service';
 import { CreateDomainDto } from './dto/create-domain.dto';
@@ -25,10 +26,11 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllDomainsDto } from './dto/find-all-domains.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Domains')
 @ApiBearerAuth()
-// @UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'domains',
   version: '1',

@@ -166,4 +166,103 @@ export class MailService {
       },
     });
   }
+
+  async outBid(
+    mailData: MailData<{
+      domaiName: string;
+      userBidAmount: number;
+      currentHighestBid: number;
+      auctionEndTime: Date;
+      firstName: string;
+    }>,
+  ): Promise<void> {
+    const i18n = I18nContext.current();
+    let outBidTitle: MaybeType<string>;
+    let text1: MaybeType<string>;
+    let text2: MaybeType<string>;
+    let text3: MaybeType<string>;
+    let text4: MaybeType<string>;
+    let text5: MaybeType<string>;
+    let text6: MaybeType<string>;
+    let text7: MaybeType<string>;
+    let text8: MaybeType<string>;
+    let text9: MaybeType<string>;
+    let text10: MaybeType<string>;
+    let text11: MaybeType<string>;
+
+    if (i18n) {
+      [
+        outBidTitle,
+        text1,
+        text2,
+        text3,
+        text4,
+        text5,
+        text6,
+        text7,
+        text8,
+        text9,
+        text10,
+        text11,
+      ] = await Promise.all([
+        i18n.t('common.outBid'),
+        i18n.t('out-bid.text1'),
+        i18n.t('out-bid.text2'),
+        i18n.t('out-bid.text3'),
+        i18n.t('out-bid.text4'),
+        i18n.t('out-bid.text5'),
+        i18n.t('out-bid.text6'),
+        i18n.t('out-bid.text7'),
+        i18n.t('out-bid.text8'),
+        i18n.t('out-bid.text9'),
+        i18n.t('out-bid.text10'),
+        i18n.t('out-bid.text11'),
+      ]);
+    }
+
+    const url = new URL(
+      this.configService.getOrThrow('app.frontendDomain', {
+        infer: true,
+      }),
+    );
+
+    await this.mailerService.sendMail({
+      to: mailData.to,
+      subject: outBidTitle,
+      text: `${url.toString()} ${outBidTitle}`,
+      templatePath: path.join(
+        this.configService.getOrThrow('app.workingDirectory', {
+          infer: true,
+        }),
+        'src',
+        'mail',
+        'mail-templates',
+        'out-bid.hbs',
+      ),
+      context: {
+        title: outBidTitle,
+        url: url.toString(),
+        actionTitle: outBidTitle,
+        app_name: this.configService.get('app.name', {
+          infer: true,
+        }),
+        text1,
+        text2,
+        text3,
+        text4,
+        text5,
+        text6,
+        text7,
+        text8,
+        text9,
+        text10,
+        text11,
+        domain_name: mailData.data.domaiName,
+        user_bid_amount: mailData.data.userBidAmount,
+        current_highest_bid: mailData.data.currentHighestBid,
+        auction_end_time: mailData.data.auctionEndTime,
+        user_name: mailData.data.firstName,
+      },
+    });
+  }
 }

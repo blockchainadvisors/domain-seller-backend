@@ -12,7 +12,7 @@ export class UpdateAuctionDto extends PartialType(CreateAuctionDto) {
     type: Number,
   })
   @IsNumber()
-  @Min(0.01) // Ensures min_increment is greater than 0
+  @Min(0.01)
   min_increment: number;
 
   @ApiProperty({
@@ -20,7 +20,7 @@ export class UpdateAuctionDto extends PartialType(CreateAuctionDto) {
     type: Number,
   })
   @IsNumber()
-  @Min(0.01) // Ensures reserve_price is greater than 0
+  @Min(0.01)
   reserve_price: number;
 
   @ApiProperty({
@@ -30,7 +30,7 @@ export class UpdateAuctionDto extends PartialType(CreateAuctionDto) {
     format: 'date-time',
   })
   @IsDate()
-  @Type(() => Date) // Ensures correct date transformation
+  @Type(() => Date)
   end_time: Date;
 
   @ApiProperty({
@@ -40,6 +40,6 @@ export class UpdateAuctionDto extends PartialType(CreateAuctionDto) {
     format: 'date-time',
   })
   @IsDate()
-  @Type(() => Date) // Ensures correct date transformation
+  @Type(() => Date)
   start_time: Date;
 }

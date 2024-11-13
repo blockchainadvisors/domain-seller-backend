@@ -11,6 +11,8 @@ export class AuctionMapper {
 
     domainEntity.reserve_price = raw.reserve_price;
 
+    domainEntity.status = raw.status;
+
     domainEntity.end_time = raw.end_time;
 
     domainEntity.start_time = raw.start_time;
@@ -33,6 +35,8 @@ export class AuctionMapper {
     persistenceEntity.reserve_price = domainEntity.reserve_price;
 
     persistenceEntity.end_time = domainEntity.end_time;
+
+    persistenceEntity.status = domainEntity.status;
 
     persistenceEntity.start_time = domainEntity.start_time;
 

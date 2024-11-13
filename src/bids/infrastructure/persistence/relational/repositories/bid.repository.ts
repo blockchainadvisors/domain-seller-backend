@@ -7,6 +7,7 @@ import { Bid } from '../../../../domain/bid';
 import { BidRepository } from '../../bid.repository';
 import { BidMapper } from '../mappers/bid.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { Auction } from '../../../../../auctions/domain/auction';
 
 @Injectable()
 export class BidRelationalRepository implements BidRepository {
@@ -39,6 +40,17 @@ export class BidRelationalRepository implements BidRepository {
   async findById(id: Bid['id']): Promise<NullableType<Bid>> {
     const entity = await this.bidRepository.findOne({
       where: { id },
+    });
+
+    return entity ? BidMapper.toDomain(entity) : null;
+  }
+
+  async findHighestBidder(id: Auction['id']): Promise<NullableType<Bid>> {
+    const entity = await this.bidRepository.findOne({
+      where: {
+        auction_id: { id }, // Access the `id` field of `auction_id` relation
+      },
+      order: { amount: 'DESC' },
     });
 
     return entity ? BidMapper.toDomain(entity) : null;

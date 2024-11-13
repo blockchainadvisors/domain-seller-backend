@@ -1,5 +1,4 @@
 import { Exclude, Expose } from 'class-transformer';
-import { FileType } from '../../files/domain/file';
 import { Role } from '../../roles/domain/role';
 import { Status } from '../../statuses/domain/status';
 import { ApiProperty } from '@nestjs/swagger';
@@ -47,11 +46,6 @@ export class User {
     example: 'Doe',
   })
   last_name: string | null;
-
-  @ApiProperty({
-    type: () => FileType,
-  })
-  photo?: FileType | null;
 
   @ApiProperty({
     type: () => Role,

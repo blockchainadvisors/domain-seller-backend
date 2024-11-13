@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto } from './dto/create-auction.dto';
@@ -25,10 +26,11 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllAuctionsDto } from './dto/find-all-auctions.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Auctions')
 @ApiBearerAuth()
-// @UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'auctions',
   version: '1',
