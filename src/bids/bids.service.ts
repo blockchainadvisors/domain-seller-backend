@@ -167,7 +167,7 @@ export class BidsService {
             userBidAmount: previousHighestBid.amount, // This is the previous highest bid amount
             auctionEndTime: auction_id.end_time,
             currentHighestBid: createBidDto.amount, // This is the new current bid amount
-            firstName: user_id.first_name ?? 'User',
+            firstName: previousHighestBid.user_id.first_name ?? 'User',
           },
         });
       }
@@ -222,5 +222,9 @@ export class BidsService {
 
   remove(id: Bid['id']) {
     return this.bidRepository.remove(id);
+  }
+
+  async findHighestBidder(auctioId: string) {
+    return this.bidRepository.findHighestBidder(auctioId);
   }
 }

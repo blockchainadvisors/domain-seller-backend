@@ -31,6 +31,7 @@ export class BidMapper {
         id: domain.id,
         status: domain.status,
         current_highest_bid: domain.current_highest_bid,
+        url: domain.url,
       };
     }
 

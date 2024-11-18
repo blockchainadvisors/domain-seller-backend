@@ -24,4 +24,6 @@ export abstract class AuctionRepository {
   ): Promise<Auction | null>;
 
   abstract remove(id: Auction['id']): Promise<void>;
+
+  abstract getAuctionsForProcessing(): Promise<Auction[]>;
 }

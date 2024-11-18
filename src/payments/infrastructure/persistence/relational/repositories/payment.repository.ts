@@ -7,6 +7,7 @@ import { Payment } from '../../../../domain/payment';
 import { PaymentRepository } from '../../payment.repository';
 import { PaymentMapper } from '../mappers/payment.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { User } from '../../../../../users/domain/user';
 
 @Injectable()
 export class PaymentRelationalRepository implements PaymentRepository {
@@ -75,5 +76,19 @@ export class PaymentRelationalRepository implements PaymentRepository {
 
   async remove(id: Payment['id']): Promise<void> {
     await this.paymentRepository.delete(id);
+  }
+
+  async findAllByUserIdWithPagination(
+    id: User['id'],
+    { page, limit }: IPaginationOptions,
+  ) {
+    const items = await this.paymentRepository.find({
+      where: { user_id: { id } },
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return items.map((item) => PaymentMapper.toDomain(item));
   }
 }

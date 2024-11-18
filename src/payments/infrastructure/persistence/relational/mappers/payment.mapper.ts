@@ -11,8 +11,46 @@ export class PaymentMapper {
 
     domainEntity.amount = raw.amount;
 
-    domainEntity.user_id = raw.user_id;
+    // domainEntity.user_id = raw.user_id;
     domainEntity.bid_id = raw.bid_id;
+
+    // **Map the user** and exclude password
+    if (raw.user_id) {
+      const user = raw.user_id;
+      domainEntity.user_id = {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      };
+    }
+
+    // **Map the bid**
+    if (raw.bid_id) {
+      const bid = raw.bid_id;
+      domainEntity.bid_id = {
+        id: bid.id,
+        amount: bid.amount,
+        created_at: bid.created_at,
+        domain_id: {
+          id: bid.domain_id.id,
+          status: bid.domain_id.status,
+          current_highest_bid: bid.domain_id.current_highest_bid,
+          url: bid.domain_id.url,
+        },
+        auction_id: {
+          id: bid.auction_id.id,
+          start_time: bid.auction_id.start_time,
+          end_time: bid.auction_id.end_time,
+        },
+        user_id: {
+          id: bid.user_id.id,
+          email: bid.user_id.email,
+          first_name: bid.user_id.first_name,
+          last_name: bid.user_id.last_name,
+        },
+      };
+    }
     domainEntity.id = raw.id;
     domainEntity.created_at = raw.created_at;
     domainEntity.updated_at = raw.updated_at;
@@ -25,18 +63,14 @@ export class PaymentMapper {
 
     persistenceEntity.amount = domainEntity.amount;
 
-    let user: UserEntity | undefined = undefined;
+    persistenceEntity.status = domainEntity.status;
 
     if (domainEntity.user_id) {
-      user = new UserEntity();
-      user.id = domainEntity.user_id.id;
+      persistenceEntity.user_id = domainEntity.user_id as UserEntity;
     }
 
-    let bid: BidEntity | undefined = undefined;
-
     if (domainEntity.bid_id) {
-      bid = new BidEntity();
-      bid.id = domainEntity.bid_id.id;
+      persistenceEntity.bid_id = domainEntity.bid_id as BidEntity;
     }
 
     if (domainEntity.id) {

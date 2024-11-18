@@ -18,7 +18,7 @@ export class Bid {
 
   @ApiProperty()
   @Expose() // Expose this field in the transformation
-  domain_id: Pick<Domain, 'id' | 'status' | 'current_highest_bid'>;
+  domain_id: Pick<Domain, 'id' | 'status' | 'current_highest_bid' | 'url'>;
 
   @ApiProperty({
     type: String,

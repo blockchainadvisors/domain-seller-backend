@@ -174,4 +174,12 @@ export class AuctionsService {
   remove(id: Auction['id']) {
     return this.auctionRepository.remove(id);
   }
+
+  async getAuctionsForProcessing() {
+    return this.auctionRepository.getAuctionsForProcessing();
+  }
+
+  async updateStatus(auctionId: string, status: string) {
+    await this.auctionRepository.update(auctionId, { status });
+  }
 }

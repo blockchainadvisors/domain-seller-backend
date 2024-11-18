@@ -105,4 +105,29 @@ export class PaymentsController {
   remove(@Param('id') id: string) {
     return this.paymentsService.remove(id);
   }
+
+  @Get('user/:userId')
+  @ApiParam({
+    name: 'userId',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Payment),
+  })
+  async findAllByUserId(
+    @Param('userId') userId: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<InfinityPaginationResponseDto<Payment>> {
+    // Ensure limit does not exceed 50
+    limit = Math.min(limit, 50);
+    return infinityPagination(
+      await this.paymentsService.findAllByUserIdWithPagination(userId, {
+        page,
+        limit,
+      }),
+      { page, limit },
+    );
+  }
 }

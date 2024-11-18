@@ -1,3 +1,4 @@
+import { User } from '../../../users/domain/user';
 import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
@@ -13,6 +14,11 @@ export abstract class PaymentRepository {
   }: {
     paginationOptions: IPaginationOptions;
   }): Promise<Payment[]>;
+
+  abstract findAllByUserIdWithPagination(
+    user_id: User['id'],
+    paginationOptions: IPaginationOptions,
+  ): Promise<Payment[]>;
 
   abstract findById(id: Payment['id']): Promise<NullableType<Payment>>;
 

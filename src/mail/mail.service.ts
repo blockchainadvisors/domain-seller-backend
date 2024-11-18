@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { I18nContext } from 'nestjs-i18n';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 import { MailData } from './interfaces/mail-data.interface';
 
 import { MaybeType } from '../utils/types/maybe.type';
@@ -13,6 +13,7 @@ export class MailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<AllConfigType>,
+    private readonly i18nService: I18nService,
   ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
@@ -262,6 +263,77 @@ export class MailService {
         current_highest_bid: mailData.data.currentHighestBid,
         auction_end_time: mailData.data.auctionEndTime,
         user_name: mailData.data.firstName,
+      },
+    });
+  }
+
+  async sendPaymentLink(
+    mailData: MailData<{
+      domainName: string;
+      amount: number;
+      firstName: string;
+    }>,
+  ): Promise<void> {
+    const [
+      paymentLinkTitle,
+      text1,
+      text2,
+      text3,
+      text4,
+      text5,
+      text6,
+      text7,
+      text8,
+      text9,
+    ] = await Promise.all([
+      this.i18nService.translate('common.paymentLink'),
+      this.i18nService.translate('payment-link.text1'),
+      this.i18nService.translate('payment-link.text2'),
+      this.i18nService.translate('payment-link.text3'),
+      this.i18nService.translate('payment-link.text4'),
+      this.i18nService.translate('payment-link.text5'),
+      this.i18nService.translate('payment-link.text6'),
+      this.i18nService.translate('payment-link.text7'),
+      this.i18nService.translate('payment-link.text8'),
+      this.i18nService.translate('payment-link.text9'),
+    ]);
+
+    // Construct the payment link URL
+    const paymentLink = new URL(
+      this.configService.getOrThrow('app.frontendDomain', { infer: true }),
+    );
+
+    // Log for debugging
+    console.log({ paymentLinkTitle, text1, text2 });
+
+    // Send the email
+    await this.mailerService.sendMail({
+      to: mailData.to,
+      subject: paymentLinkTitle || 'Domain Seller Payment Link',
+      text: `${paymentLinkTitle}: ${paymentLink.toString()}`,
+      templatePath: path.join(
+        this.configService.getOrThrow('app.workingDirectory', { infer: true }),
+        'src',
+        'mail',
+        'mail-templates',
+        'payment-link.hbs',
+      ),
+      context: {
+        paymentLinkTitle,
+        app_name: this.configService.get('app.name', { infer: true }),
+        text1,
+        text2,
+        text3,
+        text4,
+        text5,
+        text6,
+        text7,
+        text8,
+        text9,
+        user_name: mailData.data.firstName,
+        domain_name: mailData.data.domainName,
+        amount: mailData.data.amount,
+        payment_link: paymentLink,
       },
     });
   }

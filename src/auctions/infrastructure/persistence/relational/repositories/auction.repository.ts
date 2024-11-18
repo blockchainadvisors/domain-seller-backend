@@ -76,4 +76,13 @@ export class AuctionRelationalRepository implements AuctionRepository {
   async remove(id: Auction['id']): Promise<void> {
     await this.auctionRepository.delete(id);
   }
+
+  // Fetch auctions with statuses that need processing (DRAFT and ACTIVE)
+  async getAuctionsForProcessing(): Promise<Auction[]> {
+    const entities = await this.auctionRepository.find({
+      where: [{ status: 'DRAFT' }, { status: 'ACTIVE' }],
+    });
+
+    return entities.map((entity) => AuctionMapper.toDomain(entity));
+  }
 }

@@ -1,6 +1,6 @@
 import { UsersModule } from '../users/users.module';
 import { DomainsModule } from '../domains/domains.module';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BidsService } from './bids.service';
 import { BidsController } from './bids.controller';
 import { RelationalBidPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
@@ -13,7 +13,7 @@ import { MailModule } from '../mail/mail.module';
 
     DomainsModule,
 
-    AuctionsModule,
+    forwardRef(() => AuctionsModule),
 
     MailModule,
 

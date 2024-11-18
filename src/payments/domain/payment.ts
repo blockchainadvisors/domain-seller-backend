@@ -1,13 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../users/domain/user';
 import { Bid } from '../../bids/domain/bid';
+import { Expose } from 'class-transformer';
 
 export class Payment {
   @ApiProperty({
     type: String,
     nullable: true,
   })
-  stripe_id: string;
+  stripe_id?: string;
 
   @ApiProperty({
     type: String,
@@ -21,15 +22,16 @@ export class Payment {
   })
   amount: number;
 
-  @ApiProperty({
-    type: () => User,
-  })
-  user_id: User;
+  @ApiProperty()
+  @Expose() // Expose this field in the transformation
+  user_id: Pick<User, 'id' | 'email' | 'first_name' | 'last_name'>;
 
-  @ApiProperty({
-    type: () => Bid,
-  })
-  bid_id: Bid;
+  @ApiProperty()
+  @Expose() // Expose this field in the transformation
+  bid_id: Pick<
+    Bid,
+    'amount' | 'id' | 'domain_id' | 'user_id' | 'auction_id' | 'created_at'
+  >;
 
   @ApiProperty({
     type: String,
