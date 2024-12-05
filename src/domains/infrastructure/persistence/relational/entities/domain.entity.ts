@@ -29,6 +29,12 @@ export class DomainEntity extends EntityRelationalHelper {
     nullable: true,
     type: String,
   })
+  category?: string;
+
+  @Column({
+    nullable: true,
+    type: String,
+  })
   description?: string | null;
 
   @Column({

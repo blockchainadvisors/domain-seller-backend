@@ -3,7 +3,6 @@ import {
 
   IsString,
   IsOptional,
-  IsNotEmpty,
 } from 'class-validator';
 
 import {
@@ -11,11 +10,7 @@ import {
   ApiProperty,
 } from '@nestjs/swagger';
 
-export class CreateDomainDto {
-  current_highest_bid?: number | null;
-
-  status?: string;
-
+export class CreateSettingsDto {
   @ApiProperty({
     required: false,
     type: () => String,
@@ -25,20 +20,18 @@ export class CreateDomainDto {
   description?: string | null;
 
   @ApiProperty({
-    required: false,
+    required: true,
     type: () => String,
   })
-  @IsOptional()
   @IsString()
-  category?: string | null;
+  value: string;
 
   @ApiProperty({
     required: true,
     type: () => String,
   })
   @IsString()
-  @IsNotEmpty()
-  url: string;
+  key: string;
 
   // Don't forget to use the class-validator decorators in the DTO properties.
 }

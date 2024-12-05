@@ -12,6 +12,10 @@ export class DomainMapper {
 
     domainEntity.status = raw.status;
 
+    if (raw.category) {
+      domainEntity.category = raw.category;
+    }
+
     domainEntity.description = raw.description;
 
     domainEntity.url = raw.url;
@@ -32,6 +36,10 @@ export class DomainMapper {
     persistenceEntity.description = domainEntity.description;
 
     persistenceEntity.url = domainEntity.url;
+
+    if (domainEntity.category) {
+      persistenceEntity.category = domainEntity.category;
+    }
 
     if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;

@@ -1,24 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Domain {
-  @ApiProperty({
-    type: () => Number,
-    nullable: true,
-  })
-  current_highest_bid?: number | null;
-
-  @ApiProperty({
-    type: () => String,
-    nullable: false,
-  })
-  status?: string;
-
-  @ApiProperty({
-    type: () => String,
-    nullable: true,
-  })
-  category?: string | null;
-
+export class Settings {
   @ApiProperty({
     type: () => String,
     nullable: true,
@@ -29,7 +11,13 @@ export class Domain {
     type: () => String,
     nullable: false,
   })
-  url: string;
+  value: string;
+
+  @ApiProperty({
+    type: () => String,
+    nullable: false,
+  })
+  key: string;
 
   @ApiProperty({
     type: String,

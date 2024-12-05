@@ -80,7 +80,11 @@ export class AuctionRelationalRepository implements AuctionRepository {
   // Fetch auctions with statuses that need processing (DRAFT and ACTIVE)
   async getAuctionsForProcessing(): Promise<Auction[]> {
     const entities = await this.auctionRepository.find({
-      where: [{ status: 'DRAFT' }, { status: 'ACTIVE' }],
+      where: [
+        { status: 'DRAFT' },
+        { status: 'ACTIVE' },
+        { status: 'PAYMENT_PROCESSING' },
+      ],
     });
 
     return entities.map((entity) => AuctionMapper.toDomain(entity));

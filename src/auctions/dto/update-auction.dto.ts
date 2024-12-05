@@ -25,6 +25,14 @@ export class UpdateAuctionDto extends PartialType(CreateAuctionDto) {
 
   @ApiProperty({
     required: false,
+    type: Number,
+  })
+  @IsNumber()
+  @Min(0.01)
+  min_price: number;
+
+  @ApiProperty({
+    required: false,
     type: Date,
     description: 'Auction end time in date-time format',
     format: 'date-time',

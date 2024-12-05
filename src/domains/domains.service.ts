@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateDomainDto } from './dto/create-domain.dto';
 import { UpdateDomainDto } from './dto/update-domain.dto';
 import { DomainRepository } from './infrastructure/persistence/domain.repository';
@@ -12,9 +12,18 @@ export class DomainsService {
     private readonly domainRepository: DomainRepository,
   ) {}
 
+  private validateDomainName(url: string): void {
+    const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+    if (!domainRegex.test(url)) {
+      throw new BadRequestException(
+        'Invalid domain name. It should not include http:// or https://.',
+      );
+    }
+  }
   async create(createDomainDto: CreateDomainDto) {
     // Do not remove comment below.
     // <creating-property />
+    this.validateDomainName(createDomainDto.url);
 
     const status = 'LISTED';
 
@@ -26,6 +35,7 @@ export class DomainsService {
 
       status,
       description: createDomainDto.description,
+      category: createDomainDto.category,
 
       url: createDomainDto.url,
     });

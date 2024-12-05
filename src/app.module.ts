@@ -11,6 +11,7 @@ import facebookConfig from './auth-facebook/config/facebook.config';
 import googleConfig from './auth-google/config/google.config';
 import twitterConfig from './auth-twitter/config/twitter.config';
 import appleConfig from './auth-apple/config/apple.config';
+import paymentConfig from './payments/config/payment.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -45,8 +46,11 @@ import { PaymentsModule } from './payments/payments.module';
 
 import { NotificationsModule } from './notifications/notifications.module';
 
+import { SettingsModule } from './settings/settings.module';
+
 @Module({
   imports: [
+    SettingsModule,
     NotificationsModule,
     PaymentsModule,
     BidsModule,
@@ -64,6 +68,7 @@ import { NotificationsModule } from './notifications/notifications.module';
         googleConfig,
         twitterConfig,
         appleConfig,
+        paymentConfig,
       ],
       envFilePath: ['.env'],
     }),

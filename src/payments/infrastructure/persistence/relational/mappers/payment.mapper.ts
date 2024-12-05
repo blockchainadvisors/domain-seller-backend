@@ -11,6 +11,10 @@ export class PaymentMapper {
 
     domainEntity.amount = raw.amount;
 
+    if (raw.stripe_id) {
+      domainEntity.stripe_id = raw.stripe_id;
+    }
+
     // domainEntity.user_id = raw.user_id;
     domainEntity.bid_id = raw.bid_id;
 
@@ -64,6 +68,10 @@ export class PaymentMapper {
     persistenceEntity.amount = domainEntity.amount;
 
     persistenceEntity.status = domainEntity.status;
+
+    if (domainEntity.stripe_id) {
+      persistenceEntity.stripe_id = domainEntity.stripe_id;
+    }
 
     if (domainEntity.user_id) {
       persistenceEntity.user_id = domainEntity.user_id as UserEntity;

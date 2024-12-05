@@ -100,13 +100,13 @@ export class BidsService {
       if (
         (domain_id.current_highest_bid === null ||
           Number(domain_id.current_highest_bid) === 0) &&
-        createBidDto.amount <= Number(auction_id.reserve_price)
+        createBidDto.amount <= Number(auction_id.min_price)
       ) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            amount: 'mustBeGreaterThanReservePrice',
-            reservePrice: auction_id.reserve_price,
+            amount: 'mustBeGreaterThanMinimumPrice',
+            reservePrice: auction_id.min_price,
           },
         });
       }
@@ -226,5 +226,12 @@ export class BidsService {
 
   async findHighestBidder(auctioId: string) {
     return this.bidRepository.findHighestBidder(auctioId);
+  }
+
+  async findNextHighestBidder(auctioId: string, currentHighestAmount: number) {
+    return this.bidRepository.findNextHighestBidder(
+      auctioId,
+      currentHighestAmount,
+    );
   }
 }

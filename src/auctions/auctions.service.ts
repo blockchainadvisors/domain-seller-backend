@@ -68,6 +68,7 @@ export class AuctionsService {
     // Create the auction
     return this.auctionRepository.create({
       min_increment: createAuctionDto.min_increment,
+      min_price: createAuctionDto.min_price,
       reserve_price: createAuctionDto.reserve_price,
       end_time: createAuctionDto.end_time,
       start_time: createAuctionDto.start_time,
@@ -168,6 +169,7 @@ export class AuctionsService {
       end_time: updateAuctionDto.end_time || auction.end_time,
       start_time: updateAuctionDto.start_time || auction.start_time,
       domain_id: domain_id || auction.domain_id,
+      min_price: updateAuctionDto.min_price || Number(auction.min_price),
     });
   }
 

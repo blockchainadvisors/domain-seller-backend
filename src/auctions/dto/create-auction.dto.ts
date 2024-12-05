@@ -28,6 +28,14 @@ export class CreateAuctionDto {
 
   @ApiProperty({
     required: true,
+    type: Number,
+  })
+  @IsNumber()
+  @Min(0.01) // Ensures reserve_price is greater than 0
+  min_price: number;
+
+  @ApiProperty({
+    required: true,
     type: Date,
     description: 'Auction end time in date-time format',
     format: 'date-time',

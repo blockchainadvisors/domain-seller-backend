@@ -17,8 +17,10 @@ export abstract class PaymentRepository {
 
   abstract findAllByUserIdWithPagination(
     user_id: User['id'],
-    paginationOptions: IPaginationOptions,
+    paginationOptions: { page: number; limit: number; status?: string },
   ): Promise<Payment[]>;
+
+  abstract findAllPendingPayments(): Promise<Payment[]>;
 
   abstract findById(id: Payment['id']): Promise<NullableType<Payment>>;
 

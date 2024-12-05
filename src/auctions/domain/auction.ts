@@ -15,6 +15,12 @@ export class Auction {
   reserve_price: number;
 
   @ApiProperty({
+    type: () => Number,
+    nullable: false,
+  })
+  min_price: number;
+
+  @ApiProperty({
     type: Date,
     nullable: false,
     format: 'date-time',
@@ -27,6 +33,13 @@ export class Auction {
     format: 'date-time',
   })
   start_time: Date;
+
+  @ApiProperty({
+    type: Date,
+    nullable: true,
+    format: 'date-time',
+  })
+  payment_created_at?: Date;
 
   @ApiProperty({
     type: () => Domain,

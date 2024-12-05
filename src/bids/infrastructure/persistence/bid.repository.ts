@@ -27,4 +27,9 @@ export abstract class BidRepository {
   abstract remove(id: Bid['id']): Promise<void>;
 
   abstract findHighestBidder(id: Auction['id']): Promise<NullableType<Bid>>;
+
+  abstract findNextHighestBidder(
+    id: Auction['id'],
+    currentHighestAmount: number,
+  ): Promise<NullableType<Bid>>;
 }

@@ -33,6 +33,14 @@ export class AuctionEntity extends EntityRelationalHelper {
 
   @Column({
     nullable: false,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  min_price: number;
+
+  @Column({
+    nullable: false,
     type: 'timestamp',
   })
   end_time: Date;
@@ -42,6 +50,12 @@ export class AuctionEntity extends EntityRelationalHelper {
     type: 'timestamp',
   })
   start_time: Date;
+
+  @Column({
+    nullable: true,
+    type: 'timestamp',
+  })
+  payment_created_at?: Date;
 
   @Column({
     nullable: false,

@@ -11,11 +11,17 @@ export class AuctionMapper {
 
     domainEntity.reserve_price = raw.reserve_price;
 
+    domainEntity.min_price = raw.min_price;
+
     domainEntity.status = raw.status;
 
     domainEntity.end_time = raw.end_time;
 
     domainEntity.start_time = raw.start_time;
+
+    if (raw.payment_created_at) {
+      domainEntity.payment_created_at = raw.payment_created_at;
+    }
 
     if (raw.domain_id) {
       domainEntity.domain_id = DomainMapper.toDomain(raw.domain_id);
@@ -33,6 +39,8 @@ export class AuctionMapper {
     persistenceEntity.min_increment = domainEntity.min_increment;
 
     persistenceEntity.reserve_price = domainEntity.reserve_price;
+
+    persistenceEntity.min_price = domainEntity.min_price;
 
     persistenceEntity.end_time = domainEntity.end_time;
 

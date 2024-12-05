@@ -79,16 +79,29 @@ export class PaymentRelationalRepository implements PaymentRepository {
   }
 
   async findAllByUserIdWithPagination(
-    id: User['id'],
-    { page, limit }: IPaginationOptions,
-  ) {
+    user_id: User['id'],
+    { page, limit, status }: { page: number; limit: number; status?: string },
+  ): Promise<Payment[]> {
+    const whereClause: Record<string, any> = { user_id: { id: user_id } };
+    if (status) {
+      whereClause.status = status;
+    }
+
     const items = await this.paymentRepository.find({
-      where: { user_id: { id } },
+      where: whereClause,
       order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
 
     return items.map((item) => PaymentMapper.toDomain(item));
+  }
+
+  async findAllPendingPayments(): Promise<Payment[]> {
+    const entities = await this.paymentRepository.find({
+      where: { status: 'PENDING' },
+    });
+
+    return entities.map((entity) => PaymentMapper.toDomain(entity));
   }
 }

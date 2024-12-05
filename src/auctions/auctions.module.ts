@@ -7,15 +7,16 @@ import { RelationalAuctionPersistenceModule } from './infrastructure/persistence
 
 import { PaymentsModule } from '../payments/payments.module';
 
+import { SettingsModule } from '../settings/settings.module';
+
 import { BidsModule } from '../bids/bids.module';
 
 @Module({
   imports: [
     DomainsModule,
-    PaymentsModule,
-
-    forwardRef(() => BidsModule),
-    // import modules, etc.
+    SettingsModule,
+    forwardRef(() => PaymentsModule), // Use forwardRef here
+    forwardRef(() => BidsModule), // Keep BidsModule as forwardRef
     RelationalAuctionPersistenceModule,
   ],
   controllers: [AuctionsController],

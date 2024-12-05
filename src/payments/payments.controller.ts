@@ -117,17 +117,46 @@ export class PaymentsController {
   })
   async findAllByUserId(
     @Param('userId') userId: string,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('status') status?: string, // Optional status filter
   ): Promise<InfinityPaginationResponseDto<Payment>> {
-    // Ensure limit does not exceed 50
-    limit = Math.min(limit, 50);
+    const pageNumber = Math.max(Number(page) || 1, 1);
+    const limitNumber = Math.min(Math.max(Number(limit) || 10, 1), 50);
+
     return infinityPagination(
       await this.paymentsService.findAllByUserIdWithPagination(userId, {
-        page,
-        limit,
+        page: pageNumber,
+        limit: limitNumber,
+        status,
       }),
-      { page, limit },
+      { page: pageNumber, limit: limitNumber },
     );
+  }
+
+  @Post('initiate-payment/:paymentId')
+  @ApiParam({
+    name: 'paymentId',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Payment,
+  })
+  async initiatePayment(@Param('paymentId') paymentId: string) {
+    return this.paymentsService.initiatePayment(paymentId);
+  }
+
+  @Post('complete-payment/:paymentId')
+  @ApiParam({
+    name: 'paymentId',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Payment,
+  })
+  async completePayment(@Param('paymentId') paymentId: string) {
+    return this.paymentsService.completePayment(paymentId);
   }
 }

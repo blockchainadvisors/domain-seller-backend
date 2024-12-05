@@ -18,6 +18,7 @@ export class UpdateDomainDto extends PartialType(CreateDomainDto) {
     required: false,
     type: () => String,
   })
+  @IsOptional()
   @IsString()
-  url: string;
+  url?: string;
 }

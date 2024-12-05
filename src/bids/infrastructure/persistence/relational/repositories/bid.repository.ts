@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, LessThan } from 'typeorm';
 import { BidEntity } from '../entities/bid.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { Bid } from '../../../../domain/bid';
@@ -51,6 +51,21 @@ export class BidRelationalRepository implements BidRepository {
         auction_id: { id }, // Access the `id` field of `auction_id` relation
       },
       order: { amount: 'DESC' },
+    });
+
+    return entity ? BidMapper.toDomain(entity) : null;
+  }
+
+  async findNextHighestBidder(
+    auctionId: Auction['id'],
+    currentHighestAmount: number,
+  ): Promise<NullableType<Bid>> {
+    const entity = await this.bidRepository.findOne({
+      where: {
+        auction_id: { id: auctionId },
+        amount: LessThan(currentHighestAmount), // Exclude bids >= current highest amount
+      },
+      order: { amount: 'DESC' }, // Get the next highest bid
     });
 
     return entity ? BidMapper.toDomain(entity) : null;
