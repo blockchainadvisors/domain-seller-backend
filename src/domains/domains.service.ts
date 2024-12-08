@@ -12,14 +12,15 @@ export class DomainsService {
     private readonly domainRepository: DomainRepository,
   ) {}
 
-  private validateDomainName(url: string): void {
-    const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-    if (!domainRegex.test(url)) {
+  private validateDomainName(domain: string): void {
+    const domainRegex = /^[^.\\s]{1,63}(\.[^.\\s]{1,63}){1,2}$/;
+    if (!domainRegex.test(domain)) {
       throw new BadRequestException(
-        'Invalid domain name. It should not include http:// or https://.',
+        'Invalid domain name. Ensure it conforms to the correct domain format and does not include http:// or https://.',
       );
     }
   }
+
   async create(createDomainDto: CreateDomainDto) {
     // Do not remove comment below.
     // <creating-property />

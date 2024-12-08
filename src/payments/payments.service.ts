@@ -191,4 +191,8 @@ export class PaymentsService {
   async updateStatus(paymentId: string, status: string) {
     await this.paymentRepository.update(paymentId, { status });
   }
+
+  findByBidId(bidId: string) {
+    return this.paymentRepository.findByBidId(bidId);
+  }
 }

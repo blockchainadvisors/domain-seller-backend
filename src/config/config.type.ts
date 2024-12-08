@@ -8,6 +8,8 @@ import { GoogleConfig } from '../auth-google/config/google-config.type';
 import { MailConfig } from '../mail/config/mail-config.type';
 import { TwitterConfig } from '../auth-twitter/config/twitter-config.type';
 import { PaymentConfig } from '../payments/config/payment-config.type';
+import { DnsSettingsConfig } from '../dns-settings/config/dns-settings.type';
+
 export type AllConfigType = {
   app: AppConfig;
   apple: AppleConfig;
@@ -19,4 +21,5 @@ export type AllConfigType = {
   mail: MailConfig;
   twitter: TwitterConfig;
   payment: PaymentConfig;
+  dnssettings: DnsSettingsConfig;
 };

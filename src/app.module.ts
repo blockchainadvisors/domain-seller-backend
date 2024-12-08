@@ -12,6 +12,7 @@ import googleConfig from './auth-google/config/google.config';
 import twitterConfig from './auth-twitter/config/twitter.config';
 import appleConfig from './auth-apple/config/apple.config';
 import paymentConfig from './payments/config/payment.config';
+import dnsSettingsConfig from './dns-settings/config/dns-settings.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -48,8 +49,11 @@ import { NotificationsModule } from './notifications/notifications.module';
 
 import { SettingsModule } from './settings/settings.module';
 
+import { DnsSettingsModule } from './dns-settings/dns-settings.module';
+
 @Module({
   imports: [
+    DnsSettingsModule,
     SettingsModule,
     NotificationsModule,
     PaymentsModule,
@@ -69,6 +73,7 @@ import { SettingsModule } from './settings/settings.module';
         twitterConfig,
         appleConfig,
         paymentConfig,
+        dnsSettingsConfig,
       ],
       envFilePath: ['.env'],
     }),

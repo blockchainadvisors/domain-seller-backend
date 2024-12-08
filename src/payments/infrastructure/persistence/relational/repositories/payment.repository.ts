@@ -45,6 +45,14 @@ export class PaymentRelationalRepository implements PaymentRepository {
     return entity ? PaymentMapper.toDomain(entity) : null;
   }
 
+  async findByBidId(bidId: string): Promise<NullableType<Payment>> {
+    const entity = await this.paymentRepository.findOne({
+      where: { bid_id: { id: bidId } },
+    });
+
+    return entity ? PaymentMapper.toDomain(entity) : null;
+  }
+
   async findByIds(ids: Payment['id'][]): Promise<Payment[]> {
     const entities = await this.paymentRepository.find({
       where: { id: In(ids) },
