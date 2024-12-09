@@ -12,6 +12,7 @@ import {
 import { DnsSettingsService } from './dns-settings.service';
 import { CreateDnsSettingsDto } from './dto/create-dns-settings.dto';
 import { UpdateDnsSettingsDto } from './dto/update-dns-settings.dto';
+
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -108,46 +109,4 @@ export class DnsSettingsController {
   remove(@Param('id') id: string) {
     return this.dnsSettingsService.remove(id);
   }
-
-  @Patch('/transfer/accept/:domainId')
-  @ApiParam({ name: 'domainId', type: String })
-  @ApiOkResponse({
-    description: 'Accepts a pending transfer',
-  })
-  async acceptTransfer(@Param('domainId') domainId: string) {
-    return this.dnsSettingsService.acceptTransfer(domainId);
-  }
-
-  @Delete('/transfer/cancel/:domainId')
-  @ApiParam({ name: 'domainId', type: String })
-  @ApiOkResponse({
-    description: 'Cancels a pending transfer',
-  })
-  async cancelTransfer(@Param('domainId') domainId: string) {
-    return this.dnsSettingsService.cancelTransfer(domainId);
-  }
-
-  // @Patch('/dns-records/:domainId')
-  // @ApiParam({ name: 'domainId', type: String })
-  // @ApiOkResponse({
-  //   description: 'Updates DNS records for the given domain',
-  // })
-  // async updateDnsRecords(
-  //   @Param('domainId') domainId: string,
-  //   @Body() dnsRecords: any[],
-  // ) {
-  //   return this.dnsSettingsService.updateDnsRecords(domainId, dnsRecords);
-  // }
-
-  // @Patch('/nameservers/:domainId')
-  // @ApiParam({ name: 'domainId', type: String })
-  // @ApiOkResponse({
-  //   description: 'Updates the nameservers for a specific domain',
-  // })
-  // async updateNameservers(
-  //   @Param('domainId') domainId: string,
-  //   @Body() nameservers: string[],
-  // ) {
-  //   return this.dnsSettingsService.updateNameservers(domainId, nameservers);
-  // }
 }

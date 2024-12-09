@@ -63,6 +63,7 @@ export class AuctionsService {
 
     // Update the domain status to 'AUCTION_PENDING'
     domain.status = 'AUCTION_PENDING';
+    domain.current_highest_bid = 0;
     await this.domainService.update(domain.id, domain);
     const status = 'DRAFT';
     // Create the auction

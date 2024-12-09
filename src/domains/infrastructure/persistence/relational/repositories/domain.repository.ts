@@ -76,4 +76,18 @@ export class DomainRelationalRepository implements DomainRepository {
   async remove(id: Domain['id']): Promise<void> {
     await this.domainRepository.delete(id);
   }
+
+  async findAuctionActiveWithPagination({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }): Promise<Domain[]> {
+    const entities = await this.domainRepository.find({
+      where: [{ status: 'AUCTION_ACTIVE' }, { status: 'BID_RECEIVED' }],
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+    });
+
+    return entities.map((entity) => DomainMapper.toDomain(entity));
+  }
 }

@@ -99,4 +99,17 @@ export class DomainsService {
       current_highest_bid: amount,
     });
   }
+
+  findAuctionActiveDomains({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }) {
+    return this.domainRepository.findAuctionActiveWithPagination({
+      paginationOptions: {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      },
+    });
+  }
 }

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   UnprocessableEntityException,
@@ -56,16 +55,6 @@ export class DnsSettingsService {
   }
 
   async create(createDnsSettingsDto: CreateDnsSettingsDto) {
-    // Validate at least two NS records
-    const nsRecords = createDnsSettingsDto.buyer_dns.filter(
-      (record) => record.type === 'NS',
-    );
-    if (nsRecords.length < 2) {
-      throw new BadRequestException(
-        'At least two NS records must be specified.',
-      );
-    }
-
     const user = await this.userService.findById(createDnsSettingsDto.user_id);
     if (!user)
       throw new UnprocessableEntityException({
@@ -109,13 +98,13 @@ export class DnsSettingsService {
 
     // **Step 2: Use Buyer's or Default DNS/Nameservers**
     const dnsToApply = createDnsSettingsDto.buyer_dns;
-    const nameserversToApply = createDnsSettingsDto.buyer_nameservers;
+    // const nameserversToApply = createDnsSettingsDto.buyer_nameservers;
 
     // // **Step 3: Update DNS Records**
     await this.updateDnsRecords(domain.url, dnsToApply);
 
-    // // **Step 4: Update Nameservers**
-    await this.updateNameservers(domain.url, nameserversToApply);
+    // // // **Step 4: Update Nameservers**
+    // await this.updateNameservers(domain.url, nameserversToApply);
 
     //**Step 5: Initiate Transfer**
     // const registrarResponse = await this.initiateTransfer({
@@ -136,7 +125,7 @@ export class DnsSettingsService {
       buyer_nameservers: createDnsSettingsDto.buyer_nameservers,
       dns_status: 'UPDATED',
       ownership_transferred: false,
-      transfer_status: 'PENDING',
+      transfer_status: 'CREATED',
       owner_id: createDnsSettingsDto.owner_id,
       user_id: user,
       bid_id: bid,
@@ -147,19 +136,29 @@ export class DnsSettingsService {
   }
 
   async updateDnsRecords(domainId: string, dnsRecords: any[]) {
-    const apiUrl = `${this.godaddyBaseUrl}/domains/${domainId}/records`;
     const headers = {
       Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
       'Content-Type': 'application/json',
     };
 
-    try {
-      const response = await axios.put(apiUrl, dnsRecords, { headers });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating DNS records:', error);
-      throw new InternalServerErrorException('Failed to update DNS records.');
-    }
+    const updatePromises = dnsRecords.map(async (dnsRecord) => {
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domainId}/records/${dnsRecord.type}/${dnsRecord.name}`;
+      try {
+        const response = await axios.put(apiUrl, [dnsRecord], { headers });
+        console.log(`DNS Record updated successfully: ${dnsRecord.name}`);
+        return response.data;
+      } catch (error) {
+        console.error(
+          `Error updating DNS record ${dnsRecord.name}:`,
+          error.response?.data || error.message,
+        );
+        throw new Error(`Failed to update DNS record ${dnsRecord.name}.`);
+      }
+    });
+
+    // Await all updates to complete
+    const results = await Promise.all(updatePromises);
+    return results;
   }
 
   async updateNameservers(domainId: string, nameservers: string[]) {
@@ -176,95 +175,6 @@ export class DnsSettingsService {
     } catch (error) {
       console.error('Error updating nameservers:', error);
       throw new InternalServerErrorException('Failed to update nameservers.');
-    }
-  }
-
-  async acceptTransfer(domainId: string) {
-    const apiUrl = `${this.godaddyBaseUrl}/customers/domains/${domainId}/transferInAccept`;
-    const headers = {
-      Authorization: `sso-key  ${this.godaddyKey}:${this.godaddySecret}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const response = await axios.post(apiUrl, {}, { headers });
-      return response.data;
-    } catch (error) {
-      console.error('Error accepting transfer:', error);
-      throw new InternalServerErrorException('Failed to accept transfer.');
-    }
-  }
-
-  async cancelTransfer(domainId: string) {
-    const apiUrl = `${this.godaddyBaseUrl}/customers/domains/${domainId}/transferInCancel`;
-    const headers = {
-      Authorization: `sso-key  ${this.godaddyKey}:${this.godaddySecret}`,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const response = await axios.post(apiUrl, {}, { headers });
-      return response.data;
-    } catch (error) {
-      console.error('Error canceling transfer:', error);
-      throw new InternalServerErrorException('Failed to cancel transfer.');
-    }
-  }
-
-  async initiateTransfer({ domainId, buyerInfo }) {
-    const apiUrl = `${this.godaddyBaseUrl}/customers/${this.godaddyCustomerId}/domains/${domainId}/transfer`;
-
-    const headers = {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `sso-key ${process.env.GODADDY_KEY}:${process.env.GODADDY_SECRET}`,
-    };
-
-    const payload = {
-      authCode: '888888',
-      period: 1,
-      renewAuto: true,
-      privacy: false,
-      identityDocumentId: '',
-      consent: {
-        agreementKeys: ['string'],
-        price: 0,
-        currency: 'USD',
-        registryPremiumPricing: true,
-        agreedBy: 'string',
-        agreedAt: new Date().toISOString(),
-        claimToken: 'string',
-      },
-      contacts: {
-        admin: {
-          encoding: 'ASCII',
-          nameFirst: buyerInfo.firstName,
-          nameMiddle: '',
-          nameLast: buyerInfo.lastName,
-          organization: buyerInfo.organization || '',
-          jobTitle: '',
-          email: buyerInfo.email,
-          phone: buyerInfo.phone,
-          fax: '',
-          addressMailing: {
-            address1: buyerInfo.address1,
-            address2: '',
-            city: buyerInfo.city,
-            country: buyerInfo.country,
-            postalCode: buyerInfo.postalCode,
-            state: buyerInfo.state,
-          },
-          metadata: {},
-        },
-      },
-    };
-
-    try {
-      const response = await axios.post(apiUrl, payload, { headers });
-      return response.data;
-    } catch (error) {
-      console.error('Error initiating transfer:', error);
-      throw new InternalServerErrorException('Failed to initiate transfer');
     }
   }
 

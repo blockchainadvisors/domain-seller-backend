@@ -66,7 +66,7 @@ export class DnsSettings {
     default: 'PENDING',
     description: 'The current status of the transfer.',
   })
-  transfer_status: 'PENDING' | 'CREATED' | 'CANCELLED' | 'ACCEPTED';
+  transfer_status: 'CREATED' | 'CANCELLED' | 'ACCEPTED';
 
   @ApiProperty({
     type: Boolean,

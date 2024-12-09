@@ -26,7 +26,7 @@ export class AuctionSchedulerService implements OnModuleInit {
 
   onModuleInit() {
     // Trigger initial auction status check on startup
-    //void this.initAuctionStatusCheck();
+    void this.initAuctionStatusCheck();
     void this.processPendingPaymentsCheck();
   }
 
@@ -48,20 +48,6 @@ export class AuctionSchedulerService implements OnModuleInit {
       this.logger.warn('Running scheduled job for `checkAuctionStatuses`...');
       await this.checkAuctionStatuses();
     }, this.interval);
-  }
-
-  private isPaymentTimedOut(
-    paymentCreatedAt: Date,
-    pendingThreshold: number,
-  ): boolean {
-    console.log(pendingThreshold);
-    const PENDING_THRESHOLD_SECONDS = Number(pendingThreshold);
-    const currentTime = new Date();
-    const timeElapsed =
-      (currentTime.getTime() - paymentCreatedAt.getTime()) / 1000;
-
-    this.logger.log(`time ${timeElapsed}, ${PENDING_THRESHOLD_SECONDS}`);
-    return timeElapsed > PENDING_THRESHOLD_SECONDS;
   }
 
   // Method to check and update auction statuses
@@ -219,5 +205,19 @@ export class AuctionSchedulerService implements OnModuleInit {
       );
       await this.domainService.updateStatus(auction.domain_id.id, 'LISTED');
     }
+  }
+
+  private isPaymentTimedOut(
+    paymentCreatedAt: Date,
+    pendingThreshold: number,
+  ): boolean {
+    console.log(pendingThreshold);
+    const PENDING_THRESHOLD_SECONDS = Number(pendingThreshold);
+    const currentTime = new Date();
+    const timeElapsed =
+      (currentTime.getTime() - paymentCreatedAt.getTime()) / 1000;
+
+    this.logger.log(`time ${timeElapsed}, ${PENDING_THRESHOLD_SECONDS}`);
+    return timeElapsed > PENDING_THRESHOLD_SECONDS;
   }
 }

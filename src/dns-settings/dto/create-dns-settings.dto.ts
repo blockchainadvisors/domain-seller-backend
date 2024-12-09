@@ -7,6 +7,7 @@ import {
   ValidateNested,
   Min,
   IsInt,
+  IsIP,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -15,28 +16,12 @@ import { Type } from 'class-transformer';
 class DnsRecord {
   @ApiProperty({ type: String })
   @IsString()
+  @IsIP()
   data: string;
 
   @ApiProperty({ type: String })
   @IsString()
   name: string;
-
-  @ApiProperty({ type: Number, required: false })
-  @IsInt()
-  @Min(1)
-  port: number;
-
-  @ApiProperty({ type: Number, required: false })
-  @IsInt()
-  priority: number;
-
-  @ApiProperty({ type: String, required: false })
-  @IsString()
-  protocol: string;
-
-  @ApiProperty({ type: String, required: false })
-  @IsString()
-  service: string;
 
   @ApiProperty({ type: Number })
   @IsInt()
@@ -45,12 +30,8 @@ class DnsRecord {
 
   @ApiProperty({ type: String })
   @IsString()
-  @IsIn(['A', 'NS', 'CNAME', 'MX', 'TXT']) // Restrict valid types
+  @IsIn(['A']) // Restrict valid types
   type: string;
-
-  @ApiProperty({ type: Number, required: false })
-  @IsInt()
-  weight: number;
 }
 
 export class CreateDnsSettingsDto {

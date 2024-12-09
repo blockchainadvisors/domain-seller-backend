@@ -24,4 +24,10 @@ export abstract class DomainRepository {
   ): Promise<Domain | null>;
 
   abstract remove(id: Domain['id']): Promise<void>;
+
+  abstract findAuctionActiveWithPagination({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }): Promise<Domain[]>;
 }
