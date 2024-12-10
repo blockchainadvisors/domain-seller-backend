@@ -119,7 +119,7 @@ export class BidsController {
 
   @Get('/users/my-bids')
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin)
+  @Roles(RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiOkResponse({
     type: InfinityPaginationResponse(Bid),
