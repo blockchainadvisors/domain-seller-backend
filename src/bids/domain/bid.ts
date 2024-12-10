@@ -28,7 +28,10 @@ export class Bid {
 
   @ApiProperty()
   @Expose() // Expose this field in the transformation
-  auction_id: Pick<Auction, 'id' | 'start_time' | 'end_time'>;
+  auction_id: Pick<
+    Auction,
+    'id' | 'start_time' | 'end_time' | 'status' | 'current_winner'
+  >;
 
   @ApiProperty()
   @Expose() // Expose this field in the transformation

@@ -20,9 +20,16 @@ import { BidEntity } from './infrastructure/persistence/relational/entities/bid.
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 import { DomainEntity } from '../domains/infrastructure/persistence/relational/entities/domain.entity';
 import { AuctionEntity } from '../auctions/infrastructure/persistence/relational/entities/auction.entity';
+import { CreateLeaseDto } from './dto/create-lease.dto';
+import { PaymentEntity } from '../payments/infrastructure/persistence/relational/entities/payment.entity';
+import Stripe from 'stripe';
+import { ConfigService } from '@nestjs/config';
+import { AllConfigType } from '../config/config.type';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class BidsService {
+  private stripe: Stripe;
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
 
@@ -32,11 +39,23 @@ export class BidsService {
 
     private readonly auctionService: AuctionsService,
 
+    private readonly paymentService: PaymentsService,
+
     private mailService: MailService,
+
+    private readonly configService: ConfigService<AllConfigType>,
 
     // Dependencies here
     private readonly bidRepository: BidRepository,
-  ) {}
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    (this.stripe = new Stripe(
+      this.configService.getOrThrow('payment.stripeSecretKey', { infer: true }),
+    )),
+      {
+        apiVersion: '2022-11-15',
+      };
+  }
 
   async create(createBidDto: CreateBidDto) {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
@@ -233,5 +252,178 @@ export class BidsService {
       auctioId,
       currentHighestAmount,
     );
+  }
+
+  private filterBidsResponse(bids: Bid[]) {
+    return bids.map((bid) => {
+      const { auction_id, user_id } = bid;
+      const { status, ...otherAuctionFields } = auction_id; // Exclude only `status`
+      const { current_winner } = auction_id;
+
+      let bid_status: string;
+
+      switch (status) {
+        case 'ACTIVE':
+          bid_status = 'ACTIVE';
+          break;
+        case 'FAILED':
+        case 'ENDED':
+          bid_status = 'ENDED';
+          break;
+        case 'PAYMENT_PROCESSING':
+        case 'PAYMENT_PENDING':
+        case 'PAYMENT_SUCCESSFUL':
+          bid_status = current_winner === user_id.id ? status : 'ENDED';
+          break;
+        default:
+          bid_status = 'UNKNOWN';
+      }
+
+      return {
+        ...bid,
+        auction_id: {
+          ...otherAuctionFields, // Keep all other fields except `status`
+        },
+        bid_status,
+      };
+    });
+  }
+
+  async findMyBidsWithPagination(
+    {
+      paginationOptions,
+    }: {
+      paginationOptions: IPaginationOptions;
+    },
+    userId: string,
+  ) {
+    const myBid = await this.bidRepository.findMyBidWithPagination(
+      {
+        paginationOptions: {
+          page: paginationOptions.page,
+          limit: paginationOptions.limit,
+        },
+      },
+      userId,
+    );
+
+    return this.filterBidsResponse(myBid);
+  }
+
+  async LeaseNow(createLeaseDto: CreateLeaseDto, userId: string) {
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+
+      // **Validate and fetch related entities**
+      const user_id = await this.userService.findById(userId);
+      if (!user_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { user_id: 'notExists' },
+        });
+      }
+
+      const domain_id = await this.domainService.findById(
+        createLeaseDto.domain_id,
+      );
+      if (!domain_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { domain_id: 'notExists' },
+        });
+      }
+
+      const auction_id = await this.auctionService.findById(
+        createLeaseDto.auction_id,
+      );
+      if (!auction_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'notExists' },
+        });
+      }
+
+      const leaseValue = Number(auction_id.lease_price) * 0.8;
+
+      // // **Fetch the previous highest bid within the current auction**
+      const previousHighestBid = await this.bidRepository.findHighestBidder(
+        auction_id.id,
+      );
+
+      if (Number(previousHighestBid?.amount) > leaseValue) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { domain_id: 'leaseNotAvailable' },
+        });
+      }
+      const url = new URL(
+        this.configService.getOrThrow('app.frontendDomain', {
+          infer: true,
+        }),
+      );
+
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'GBP',
+              product_data: {
+                name: `Payment for ${domain_id.url}`,
+              },
+              unit_amount: auction_id.lease_price * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${url}/payment/success`,
+        cancel_url: `${url}/payment/cancel`,
+      });
+
+      console.log(session);
+
+      // **Create bid**: Now that user_id, domain_id, and auction_id are resolved, create the bid entity
+      const newPayment = manager.create(PaymentEntity, {
+        user_id: user_id as UserEntity,
+        amount: auction_id.lease_price,
+        // bid_id: createPaymentDto.bid_id as BidEntity,
+        status: 'PROCESSING',
+        stripe_id: session.id,
+      });
+
+      // Save the new bid
+      await manager.save(newPayment);
+
+      // **Update domain status if it's the first bid**
+      const domainRepository = queryRunner.manager.getRepository(DomainEntity);
+      await domainRepository.update(domain_id.id, {
+        status: 'LEASE_PENDING',
+      });
+
+      // **Update domain status if it's the first bid**
+      const auctionRepository =
+        queryRunner.manager.getRepository(AuctionEntity);
+      await auctionRepository.update(auction_id.id, {
+        status: 'LEASE_PENDING',
+      });
+
+      // **Commit the transaction**
+      await queryRunner.commitTransaction();
+
+      const getPayment = await this.paymentService.findById(newPayment.id);
+      return getPayment;
+    } catch (error) {
+      // **Rollback the transaction in case of error**
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // **Release the query runner to avoid memory leaks**
+      await queryRunner.release();
+    }
   }
 }

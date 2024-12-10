@@ -43,6 +43,12 @@ export class DomainEntity extends EntityRelationalHelper {
   })
   url: string;
 
+  @Column({
+    nullable: true,
+    type: String,
+  })
+  current_owner?: string;
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -18,6 +18,12 @@ export class Auction {
     type: () => Number,
     nullable: false,
   })
+  lease_price: number;
+
+  @ApiProperty({
+    type: () => Number,
+    nullable: false,
+  })
   min_price: number;
 
   @ApiProperty({
@@ -52,6 +58,12 @@ export class Auction {
     nullable: false,
   })
   status?: string;
+
+  @ApiProperty({
+    type: () => String,
+    nullable: true,
+  })
+  current_winner?: string;
 
   @ApiProperty({
     type: String,

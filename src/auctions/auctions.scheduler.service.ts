@@ -97,10 +97,14 @@ export class AuctionSchedulerService implements OnModuleInit {
                 amount: highestBid.amount,
                 status: 'PENDING',
               });
-              await this.auctionService.updateStatus(
-                auction.id,
-                'PAYMENT_PENDING',
-              );
+              // await this.auctionService.update(
+              //   auction.id,
+              //   'PAYMENT_PENDING',
+              // );
+              await this.auctionService.update(auction.id, {
+                status: 'PAYMENT_PENDING',
+                current_winner: highestBid.user_id.id,
+              });
               this.logger.log(
                 `Payment record created for auction ${auction.id}`,
               );
@@ -192,6 +196,9 @@ export class AuctionSchedulerService implements OnModuleInit {
         bid_id: nextHighestBid,
         amount: nextHighestBid.amount,
         status: 'PENDING',
+      });
+      await this.auctionService.update(auction.id, {
+        current_winner: nextHighestBid.user_id.id,
       });
 
       this.logger.log(

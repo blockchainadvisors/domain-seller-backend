@@ -5,6 +5,7 @@ import { BidsService } from './bids.service';
 import { BidsController } from './bids.controller';
 import { RelationalBidPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { AuctionsModule } from '../auctions/auctions.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { MailModule } from '../mail/mail.module';
 
 @Module({
@@ -12,6 +13,8 @@ import { MailModule } from '../mail/mail.module';
     UsersModule,
 
     DomainsModule,
+
+    PaymentsModule,
 
     forwardRef(() => AuctionsModule),
 

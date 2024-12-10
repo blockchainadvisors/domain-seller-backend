@@ -75,6 +75,7 @@ export class AuctionsService {
       start_time: createAuctionDto.start_time,
       domain_id: domain,
       status,
+      lease_price: createAuctionDto.lease_price,
     });
   }
 

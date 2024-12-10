@@ -25,7 +25,7 @@ export class CreatePaymentDto {
   @Type(() => User)
   user_id: User;
 
-  @ApiProperty({ type: Bid })
+  @ApiProperty({ type: Bid, required: false })
   @Type(() => Bid)
   bid_id: Bid;
 }

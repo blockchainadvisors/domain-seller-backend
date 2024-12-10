@@ -42,6 +42,8 @@ export class BidMapper {
         id: auction.id,
         start_time: auction.start_time,
         end_time: auction.end_time,
+        status: auction.status,
+        current_winner: auction.current_winner,
       };
     }
 

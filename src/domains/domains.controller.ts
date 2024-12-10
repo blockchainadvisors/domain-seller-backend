@@ -27,6 +27,9 @@ import {
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllDomainsDto } from './dto/find-all-domains.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../roles/roles.decorator';
+import { RoleEnum } from '../roles/roles.enum';
+import { RolesGuard } from '../roles/roles.guard';
 
 @ApiTags('Domains')
 @Controller({
@@ -38,7 +41,8 @@ export class DomainsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiCreatedResponse({
     type: Domain,
   })
@@ -87,7 +91,8 @@ export class DomainsController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -102,7 +107,8 @@ export class DomainsController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,

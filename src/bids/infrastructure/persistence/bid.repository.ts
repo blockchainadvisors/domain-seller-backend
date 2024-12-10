@@ -15,6 +15,15 @@ export abstract class BidRepository {
     paginationOptions: IPaginationOptions;
   }): Promise<Bid[]>;
 
+  abstract findMyBidWithPagination(
+    {
+      paginationOptions,
+    }: {
+      paginationOptions: IPaginationOptions;
+    },
+    user_id: string,
+  ): Promise<Bid[]>;
+
   abstract findById(id: Bid['id']): Promise<NullableType<Bid>>;
 
   abstract findByIds(ids: Bid['id'][]): Promise<Bid[]>;

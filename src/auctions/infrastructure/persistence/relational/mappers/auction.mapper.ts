@@ -11,6 +11,8 @@ export class AuctionMapper {
 
     domainEntity.reserve_price = raw.reserve_price;
 
+    domainEntity.lease_price = raw.lease_price;
+
     domainEntity.min_price = raw.min_price;
 
     domainEntity.status = raw.status;
@@ -27,6 +29,10 @@ export class AuctionMapper {
       domainEntity.domain_id = DomainMapper.toDomain(raw.domain_id);
     }
 
+    if (raw.current_winner) {
+      domainEntity.current_winner = raw.current_winner;
+    }
+
     domainEntity.id = raw.id;
     domainEntity.created_at = raw.created_at;
     domainEntity.updated_at = raw.updated_at;
@@ -39,6 +45,8 @@ export class AuctionMapper {
     persistenceEntity.min_increment = domainEntity.min_increment;
 
     persistenceEntity.reserve_price = domainEntity.reserve_price;
+
+    persistenceEntity.lease_price = domainEntity.lease_price;
 
     persistenceEntity.min_price = domainEntity.min_price;
 

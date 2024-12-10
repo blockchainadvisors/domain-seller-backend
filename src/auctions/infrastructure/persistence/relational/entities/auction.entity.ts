@@ -32,6 +32,22 @@ export class AuctionEntity extends EntityRelationalHelper {
   reserve_price: number;
 
   @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  lease_price: number;
+
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  expiry_duration: number;
+
+  @Column({
     nullable: false,
     type: 'decimal',
     precision: 18,
@@ -62,6 +78,12 @@ export class AuctionEntity extends EntityRelationalHelper {
     type: String,
   })
   status?: string;
+
+  @Column({
+    nullable: true,
+    type: String,
+  })
+  current_winner?: string;
 
   @OneToOne(() => DomainEntity, { eager: true, nullable: false })
   @JoinColumn({ name: 'domain_id' })

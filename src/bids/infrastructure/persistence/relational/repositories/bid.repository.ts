@@ -37,6 +37,23 @@ export class BidRelationalRepository implements BidRepository {
     return entities.map((entity) => BidMapper.toDomain(entity));
   }
 
+  async findMyBidWithPagination(
+    {
+      paginationOptions,
+    }: {
+      paginationOptions: IPaginationOptions;
+    },
+    user_id: string,
+  ): Promise<Bid[]> {
+    const entities = await this.bidRepository.find({
+      where: { user_id: { id: user_id } },
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+    });
+
+    return entities.map((entity) => BidMapper.toDomain(entity));
+  }
+
   async findById(id: Bid['id']): Promise<NullableType<Bid>> {
     const entity = await this.bidRepository.findOne({
       where: { id },

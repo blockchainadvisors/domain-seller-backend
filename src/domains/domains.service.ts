@@ -13,7 +13,7 @@ export class DomainsService {
   ) {}
 
   private validateDomainName(domain: string): void {
-    const domainRegex = /^[^.\\s]{1,63}(\.[^.\\s]{1,63}){1,2}$/;
+    const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]{1,63}\.)+[a-zA-Z]{2,63}$/;
     if (!domainRegex.test(domain)) {
       throw new BadRequestException(
         'Invalid domain name. Ensure it conforms to the correct domain format and does not include http:// or https://.',

@@ -32,6 +32,14 @@ export class CreateAuctionDto {
   })
   @IsNumber()
   @Min(0.01) // Ensures reserve_price is greater than 0
+  lease_price: number;
+
+  @ApiProperty({
+    required: true,
+    type: Number,
+  })
+  @IsNumber()
+  @Min(0.01) // Ensures reserve_price is greater than 0
   min_price: number;
 
   @ApiProperty({
@@ -60,4 +68,8 @@ export class CreateAuctionDto {
   })
   @IsString()
   domain_id: string;
+
+  status?: string;
+
+  current_winner?: string;
 }
