@@ -108,7 +108,10 @@ export class BidsService {
         });
       }
 
-      if (auction_id.end_time && currentTime > auction_id.end_time) {
+      if (
+        (auction_id.end_time && currentTime > auction_id.end_time) ||
+        auction_id.status === 'LEASE_PENDING'
+      ) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: { auction: 'hasEnded' },
@@ -256,7 +259,7 @@ export class BidsService {
 
   private filterBidsResponse(bids: Bid[]) {
     return bids.map((bid) => {
-      const { auction_id, user_id } = bid;
+      const { auction_id, user_id, domain_id, ...otherBidFields } = bid;
       const { status, ...otherAuctionFields } = auction_id; // Exclude only `status`
       const { current_winner } = auction_id;
 
@@ -268,6 +271,7 @@ export class BidsService {
           break;
         case 'FAILED':
         case 'ENDED':
+        case 'LEASE_PENDING':
           bid_status = 'ENDED';
           break;
         case 'PAYMENT_PROCESSING':
@@ -280,11 +284,13 @@ export class BidsService {
       }
 
       return {
-        ...bid,
+        ...otherBidFields,
         auction_id: {
-          ...otherAuctionFields, // Keep all other fields except `status`
+          ...otherAuctionFields,
         },
         bid_status,
+        url: domain_id.url,
+        domain_id: domain_id.id,
       };
     });
   }
@@ -310,7 +316,7 @@ export class BidsService {
     return this.filterBidsResponse(myBid);
   }
 
-  async LeaseNow(createLeaseDto: CreateLeaseDto, userId: string) {
+  async leaseNow(createLeaseDto: CreateLeaseDto, userId: string) {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

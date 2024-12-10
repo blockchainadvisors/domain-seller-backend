@@ -127,7 +127,7 @@ export class BidsController {
   async findMyBids(
     @Query() query: FindAllBidsDto,
     @Request() req,
-  ): Promise<InfinityPaginationResponseDto<Bid>> {
+  ): Promise<InfinityPaginationResponseDto<any>> {
     const page = query?.page ?? 1;
     const userId: string = req.user?.id; //
     let limit = query?.limit ?? 10;
@@ -157,6 +157,6 @@ export class BidsController {
   })
   leaseNow(@Body() createLeaseDto: CreateLeaseDto, @Request() req) {
     const user_id: string = req.user?.id;
-    return this.bidsService.LeaseNow(createLeaseDto, user_id);
+    return this.bidsService.leaseNow(createLeaseDto, user_id);
   }
 }

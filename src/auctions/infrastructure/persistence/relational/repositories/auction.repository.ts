@@ -90,14 +90,6 @@ export class AuctionRelationalRepository implements AuctionRepository {
     return entities.map((entity) => AuctionMapper.toDomain(entity));
   }
 
-  // async findActiveDomains(): Promise<Auction[]> {
-  //   const entities = await this.auctionRepository.find({
-  //     where:
-  //       { status: 'ACTIVE' },
-  //   });
-
-  //   return entities.map((entity) => AuctionMapper.toDomain(entity));
-  // }
   async findActiveDomainsWithDetails(): Promise<any[]> {
     const auctions = await this.auctionRepository
       .createQueryBuilder('auction')
