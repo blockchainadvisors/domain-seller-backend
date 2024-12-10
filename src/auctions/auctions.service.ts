@@ -186,4 +186,17 @@ export class AuctionsService {
   async updateStatus(auctionId: string, status: string) {
     await this.auctionRepository.update(auctionId, { status });
   }
+
+  findActiveDomains({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }) {
+    return this.auctionRepository.findActiveDomainsWithDetails({
+      paginationOptions: {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      },
+    });
+  }
 }

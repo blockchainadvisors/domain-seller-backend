@@ -26,4 +26,10 @@ export abstract class AuctionRepository {
   abstract remove(id: Auction['id']): Promise<void>;
 
   abstract getAuctionsForProcessing(): Promise<Auction[]>;
+
+  abstract findActiveDomainsWithDetails({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }): Promise<any[]>;
 }

@@ -29,8 +29,6 @@ import { FindAllAuctionsDto } from './dto/find-all-auctions.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Auctions')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'auctions',
   version: '1',
@@ -39,6 +37,8 @@ export class AuctionsController {
   constructor(private readonly auctionsService: AuctionsService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiCreatedResponse({
     type: Auction,
   })
@@ -47,6 +47,8 @@ export class AuctionsController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     type: InfinityPaginationResponse(Auction),
   })
@@ -84,6 +86,8 @@ export class AuctionsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -97,6 +101,8 @@ export class AuctionsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -104,5 +110,29 @@ export class AuctionsController {
   })
   remove(@Param('id') id: string) {
     return this.auctionsService.remove(id);
+  }
+
+  @Get('/available/domain')
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Auction),
+  })
+  async findAuctionActiveDomains(
+    @Query() query: FindAllAuctionsDto,
+  ): Promise<InfinityPaginationResponseDto<Auction>> {
+    const page = query?.page ?? 1;
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return infinityPagination(
+      await this.auctionsService.findActiveDomains({
+        paginationOptions: {
+          page,
+          limit,
+        },
+      }),
+      { page, limit },
+    );
   }
 }

@@ -89,4 +89,43 @@ export class AuctionRelationalRepository implements AuctionRepository {
 
     return entities.map((entity) => AuctionMapper.toDomain(entity));
   }
+
+  // async findActiveDomains(): Promise<Auction[]> {
+  //   const entities = await this.auctionRepository.find({
+  //     where:
+  //       { status: 'ACTIVE' },
+  //   });
+
+  //   return entities.map((entity) => AuctionMapper.toDomain(entity));
+  // }
+  async findActiveDomainsWithDetails(): Promise<any[]> {
+    const auctions = await this.auctionRepository
+      .createQueryBuilder('auction')
+      .leftJoinAndSelect('domain', 'domain', 'domain.id = auction.domain_id') // Join domain table
+      .leftJoin('bid', 'bid', 'bid.auction_id = auction.id') // Explicit join using auction_id in bids
+      .select([
+        'auction.id AS id',
+        'auction.status AS status',
+        'domain.url AS url',
+        'domain.category AS category',
+        'domain.description AS description',
+        'auction.lease_price AS lease_price',
+        'COALESCE(MAX(bid.amount), 0) AS current_highest_bid', // Get highest bid
+        'COUNT(bid.id) AS total_bids', // Count total bids
+      ])
+      .where('auction.status = :status', { status: 'ACTIVE' })
+      .groupBy('auction.id, domain.id')
+      .getRawMany();
+
+    return auctions.map((auction) => ({
+      id: auction.id,
+      current_highest_bid: auction.current_highest_bid,
+      total_bids: parseInt(auction.total_bids, 10),
+      lease_price: auction.lease_price,
+      status: auction.status,
+      category: auction.category,
+      description: auction.description,
+      url: auction.url,
+    }));
+  }
 }

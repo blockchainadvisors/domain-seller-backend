@@ -347,6 +347,13 @@ export class BidsService {
         });
       }
 
+      if (auction_id.status === 'LEASE_PENDING') {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'leaseOngoing' },
+        });
+      }
+
       const leaseValue = Number(auction_id.lease_price) * 0.8;
 
       // // **Fetch the previous highest bid within the current auction**
@@ -415,8 +422,8 @@ export class BidsService {
       // **Commit the transaction**
       await queryRunner.commitTransaction();
 
-      const getPayment = await this.paymentService.findById(newPayment.id);
-      return getPayment;
+      //const getPayment = await this.paymentService.findById(newPayment.id);
+      return { payment_url: session.url };
     } catch (error) {
       // **Rollback the transaction in case of error**
       await queryRunner.rollbackTransaction();

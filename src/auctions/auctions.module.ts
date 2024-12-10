@@ -15,8 +15,9 @@ import { BidsModule } from '../bids/bids.module';
   imports: [
     DomainsModule,
     SettingsModule,
-    forwardRef(() => PaymentsModule), // Use forwardRef here
-    forwardRef(() => BidsModule), // Keep BidsModule as forwardRef
+    forwardRef(() => PaymentsModule),
+    forwardRef(() => PaymentsModule),
+    forwardRef(() => BidsModule),
     RelationalAuctionPersistenceModule,
   ],
   controllers: [AuctionsController],

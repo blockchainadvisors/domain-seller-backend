@@ -117,28 +117,4 @@ export class DomainsController {
   remove(@Param('id') id: string) {
     return this.domainsService.remove(id);
   }
-
-  @Get('/status/auction-active')
-  @ApiOkResponse({
-    type: InfinityPaginationResponse(Domain),
-  })
-  async findAuctionActiveDomains(
-    @Query() query: FindAllDomainsDto,
-  ): Promise<InfinityPaginationResponseDto<Domain>> {
-    const page = query?.page ?? 1;
-    let limit = query?.limit ?? 10;
-    if (limit > 50) {
-      limit = 50;
-    }
-
-    return infinityPagination(
-      await this.domainsService.findAuctionActiveDomains({
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
-  }
 }

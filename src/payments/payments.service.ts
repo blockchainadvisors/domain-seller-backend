@@ -146,7 +146,7 @@ export class PaymentsService {
       'PAYMENT_PROCESSING',
     );
 
-    return { sessionId: session.id };
+    return { payment_url: session.url };
   }
 
   async completePayment(paymentId: string) {
