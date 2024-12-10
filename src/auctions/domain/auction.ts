@@ -70,6 +70,12 @@ export class Auction {
   })
   id: string;
 
+  @ApiProperty({
+    type: () => Number,
+    nullable: false,
+  })
+  expiry_duration: number;
+
   @ApiProperty()
   created_at: Date;
 

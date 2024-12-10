@@ -30,6 +30,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
 import { RolesGuard } from '../roles/roles.guard';
+import { Request } from '@nestjs/common';
 
 @ApiTags('Domains')
 @Controller({
@@ -116,5 +117,37 @@ export class DomainsController {
   })
   remove(@Param('id') id: string) {
     return this.domainsService.remove(id);
+  }
+
+  @Get('/users/my-domains')
+  @ApiBearerAuth()
+  @Roles(RoleEnum.user)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Domain),
+  })
+  async findMyBids(
+    @Query() query: FindAllDomainsDto,
+    @Request() req,
+  ): Promise<InfinityPaginationResponseDto<any>> {
+    const page = query?.page ?? 1;
+    const userId: string = req.user?.id; //
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return infinityPagination(
+      await this.domainsService.findMyDomainsWithPagination(
+        {
+          paginationOptions: {
+            page,
+            limit,
+          },
+        },
+        userId,
+      ),
+      { page, limit },
+    );
   }
 }

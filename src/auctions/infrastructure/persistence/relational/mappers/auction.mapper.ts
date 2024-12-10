@@ -21,10 +21,6 @@ export class AuctionMapper {
 
     domainEntity.start_time = raw.start_time;
 
-    if (raw.payment_created_at) {
-      domainEntity.payment_created_at = raw.payment_created_at;
-    }
-
     if (raw.domain_id) {
       domainEntity.domain_id = DomainMapper.toDomain(raw.domain_id);
     }
@@ -47,6 +43,8 @@ export class AuctionMapper {
     persistenceEntity.reserve_price = domainEntity.reserve_price;
 
     persistenceEntity.lease_price = domainEntity.lease_price;
+
+    persistenceEntity.expiry_duration = domainEntity.expiry_duration;
 
     persistenceEntity.min_price = domainEntity.min_price;
 

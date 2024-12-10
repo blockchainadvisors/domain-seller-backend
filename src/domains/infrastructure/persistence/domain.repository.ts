@@ -30,4 +30,13 @@ export abstract class DomainRepository {
   }: {
     paginationOptions: IPaginationOptions;
   }): Promise<Domain[]>;
+
+  abstract findMyDomainsWithPagination(
+    {
+      paginationOptions,
+    }: {
+      paginationOptions: IPaginationOptions;
+    },
+    user_id: string,
+  ): Promise<Domain[]>;
 }

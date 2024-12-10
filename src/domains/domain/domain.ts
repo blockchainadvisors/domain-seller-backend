@@ -32,6 +32,25 @@ export class Domain {
   url: string;
 
   @ApiProperty({
+    type: Date,
+    nullable: true,
+    format: 'date-time',
+  })
+  registration_date?: Date;
+
+  @ApiProperty({
+    type: () => Number,
+    nullable: true,
+  })
+  renewal_price?: number | null;
+
+  @ApiProperty({
+    type: () => String,
+    nullable: true,
+  })
+  current_owner?: string | null;
+
+  @ApiProperty({
     type: String,
   })
   id: string;

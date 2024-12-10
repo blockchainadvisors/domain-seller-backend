@@ -25,7 +25,6 @@ import { PaymentEntity } from '../payments/infrastructure/persistence/relational
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
-import { PaymentsService } from '../payments/payments.service';
 import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
@@ -39,8 +38,6 @@ export class BidsService {
     private readonly domainService: DomainsService,
 
     private readonly auctionService: AuctionsService,
-
-    private readonly paymentService: PaymentsService,
 
     private mailService: MailService,
 
@@ -279,7 +276,8 @@ export class BidsService {
           break;
         case 'PAYMENT_PROCESSING':
         case 'PAYMENT_PENDING':
-        case 'PAYMENT_SUCCESSFUL':
+        case 'PAYMENT_COMPLETED':
+        case 'PAYMENT_FAILED':
           bid_status = current_winner === user_id.id ? status : 'ENDED';
           break;
         default:
@@ -446,5 +444,9 @@ export class BidsService {
       // **Release the query runner to avoid memory leaks**
       await queryRunner.release();
     }
+  }
+
+  async findCountByAuctionId(auctioId: string) {
+    return this.bidRepository.findCountByAuctionId(auctioId);
   }
 }

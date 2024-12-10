@@ -72,4 +72,12 @@ export class CreateAuctionDto {
   status?: string;
 
   current_winner?: string;
+
+  @ApiProperty({
+    required: true,
+    type: Number,
+  })
+  @IsNumber()
+  @Min(0.01)
+  expiry_duration: number;
 }

@@ -31,7 +31,6 @@ export class DomainsService {
     return this.domainRepository.create({
       // Do not remove comment below.
       // <creating-property-payload />
-
       current_highest_bid: createDomainDto.current_highest_bid,
 
       status,
@@ -111,5 +110,27 @@ export class DomainsService {
         limit: paginationOptions.limit,
       },
     });
+  }
+
+  async findMyDomainsWithPagination(
+    {
+      paginationOptions,
+    }: {
+      paginationOptions: IPaginationOptions;
+    },
+    userId: string,
+  ) {
+    const myDomain = await this.domainRepository.findMyDomainsWithPagination(
+      {
+        paginationOptions: {
+          page: paginationOptions.page,
+          limit: paginationOptions.limit,
+        },
+      },
+      userId,
+    );
+
+    return myDomain;
+    //this.filterDomainsResponse(myDomain);
   }
 }

@@ -61,10 +61,10 @@ export class AuctionsService {
       });
     }
 
-    // Update the domain status to 'AUCTION_PENDING'
-    domain.status = 'AUCTION_PENDING';
-    domain.current_highest_bid = 0;
-    await this.domainService.update(domain.id, domain);
+    await this.domainService.update(domain.id, {
+      status: 'AUCTION_PENDING',
+      current_highest_bid: 0,
+    });
     const status = 'DRAFT';
     // Create the auction
     return this.auctionRepository.create({
@@ -76,6 +76,7 @@ export class AuctionsService {
       domain_id: domain,
       status,
       lease_price: createAuctionDto.lease_price,
+      expiry_duration: createAuctionDto.expiry_duration,
     });
   }
 

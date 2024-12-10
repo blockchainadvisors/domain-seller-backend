@@ -90,4 +90,30 @@ export class DomainRelationalRepository implements DomainRepository {
 
     return entities.map((entity) => DomainMapper.toDomain(entity));
   }
+
+  async findMyDomainsWithPagination(
+    { paginationOptions }: { paginationOptions: IPaginationOptions },
+    user_id: string,
+  ): Promise<any[]> {
+    const entities = await this.domainRepository.find({
+      where: { current_owner: user_id },
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      relations: ['auction'], // Ensure the auction relationship is fetched
+    });
+
+    return entities.map((entity) => ({
+      id: entity.id,
+      current_highest_bid: entity.current_highest_bid,
+      category: entity.category,
+      description: entity.description,
+      status: entity.status,
+      url: entity.url,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at,
+      registration_date: entity.registration_date,
+      renewal_price: entity.renewal_price,
+      expiry_duration: entity.auction?.expiry_duration || null, // Access expiry_duration from auction
+    }));
+  }
 }

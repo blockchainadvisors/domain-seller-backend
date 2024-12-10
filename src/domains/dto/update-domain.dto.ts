@@ -21,4 +21,28 @@ export class UpdateDomainDto extends PartialType(CreateDomainDto) {
   @IsOptional()
   @IsString()
   url?: string;
+
+  @ApiProperty({
+    required: false,
+    type: () => String,
+  })
+  @IsOptional()
+  @IsString()
+  current_owner?: string;
+
+  @ApiProperty({
+    required: false,
+    type: () => Number,
+  })
+  @IsOptional()
+  @IsString()
+  renewal_price?: number;
+
+  @ApiProperty({
+    required: false,
+    type: () => Date,
+  })
+  @IsOptional()
+  @IsString()
+  registration_date?: Date;
 }

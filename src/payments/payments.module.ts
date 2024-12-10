@@ -5,13 +5,17 @@ import { RelationalPaymentPersistenceModule } from './infrastructure/persistence
 import { MailModule } from '../mail/mail.module';
 import { AuctionsModule } from '../auctions/auctions.module';
 import { DomainsModule } from '../domains/domains.module';
+import { BidsModule } from '../bids/bids.module';
 
 @Module({
   imports: [
     MailModule,
 
     forwardRef(() => AuctionsModule),
-    DomainsModule,
+
+    forwardRef(() => DomainsModule),
+
+    forwardRef(() => BidsModule), // Add BidsModule here
 
     // import modules, etc.
     RelationalPaymentPersistenceModule,

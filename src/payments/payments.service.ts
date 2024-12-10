@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentRepository } from './infrastructure/persistence/payment.repository';
@@ -12,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
 import { AuctionsService } from '../auctions/auctions.service';
 import { DomainsService } from '../domains/domains.service';
+import { BidsService } from '../bids/bids.service';
 
 @Injectable()
 export class PaymentsService {
@@ -23,6 +29,8 @@ export class PaymentsService {
     private readonly paymentRepository: PaymentRepository,
     private readonly configService: ConfigService<AllConfigType>,
     private mailService: MailService,
+    @Inject(forwardRef(() => BidsService))
+    private readonly bidsService: BidsService,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     (this.stripe = new Stripe(
@@ -160,6 +168,7 @@ export class PaymentsService {
     );
 
     if (session.payment_status === 'paid') {
+      const currentTime = new Date();
       await this.paymentRepository.update(paymentId, { status: 'PAID' });
       await this.auctionService.updateStatus(
         payment.bid_id.auction_id.id,
@@ -167,17 +176,46 @@ export class PaymentsService {
       );
       await this.domainService.update(payment.bid_id.id, {
         status: 'PAYMENT_COMPLETED',
+        current_owner: payment.user_id.id,
+        registration_date: currentTime,
+        renewal_price: payment.bid_id.amount,
       });
     } else {
       await this.paymentRepository.update(paymentId, { status: 'FAILED' });
-      await this.auctionService.updateStatus(
-        payment.bid_id.auction_id.id,
-        'PAYMENT_COMPLETED',
-      );
-      await this.domainService.updateStatus(
-        payment.bid_id.id,
-        'PAYMENT_FAILED',
-      );
+      const currentTime = new Date();
+      if (payment.bid_id.auction_id.end_time <= currentTime) {
+        await this.auctionService.updateStatus(
+          payment.bid_id.auction_id.id,
+          'PAYMENT_FAILED',
+        );
+        await this.domainService.updateStatus(
+          payment.bid_id.id,
+          'PAYMENT_FAILED',
+        );
+      } else {
+        const bidsCount = await this.bidsService.findCountByAuctionId(
+          payment.bid_id.auction_id.id,
+        );
+        if (bidsCount > 0) {
+          await this.auctionService.updateStatus(
+            payment.bid_id.auction_id.id,
+            'ACTIVE',
+          );
+          await this.domainService.updateStatus(
+            payment.bid_id.id,
+            'BID_RECIEVED',
+          );
+        } else {
+          await this.auctionService.updateStatus(
+            payment.bid_id.auction_id.id,
+            'ACTIVE',
+          );
+          await this.domainService.updateStatus(
+            payment.bid_id.id,
+            'AUCTION_ACTIVE',
+          );
+        }
+      }
     }
 
     return this.paymentRepository.findById(paymentId);

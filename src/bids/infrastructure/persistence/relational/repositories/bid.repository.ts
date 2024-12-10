@@ -120,4 +120,10 @@ export class BidRelationalRepository implements BidRepository {
   async remove(id: Bid['id']): Promise<void> {
     await this.bidRepository.delete(id);
   }
+
+  async findCountByAuctionId(auction_id: string): Promise<number> {
+    return this.bidRepository.count({
+      where: { auction_id: { id: auction_id } },
+    });
+  }
 }

@@ -4,8 +4,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   Column,
+  OneToOne,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
+import { AuctionEntity } from '../../../../../auctions/infrastructure/persistence/relational/entities/auction.entity';
 
 @Entity({
   name: 'domain',
@@ -45,9 +47,23 @@ export class DomainEntity extends EntityRelationalHelper {
 
   @Column({
     nullable: true,
+    type: 'timestamp',
+  })
+  registration_date?: Date;
+
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  renewal_price?: number;
+
+  @Column({
+    nullable: true,
     type: String,
   })
-  current_owner?: string;
+  current_owner?: string | null;
 
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -57,4 +73,7 @@ export class DomainEntity extends EntityRelationalHelper {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToOne(() => AuctionEntity, (auction) => auction.domain_id)
+  auction: AuctionEntity;
 }

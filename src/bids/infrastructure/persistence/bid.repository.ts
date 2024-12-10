@@ -41,4 +41,6 @@ export abstract class BidRepository {
     id: Auction['id'],
     currentHighestAmount: number,
   ): Promise<NullableType<Bid>>;
+
+  abstract findCountByAuctionId(auctionId: string): Promise<number>;
 }

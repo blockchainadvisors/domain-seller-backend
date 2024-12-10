@@ -15,7 +15,8 @@ import { SettingsModule } from '../settings/settings.module';
 
     DomainsModule,
 
-    PaymentsModule,
+    // PaymentsModule,
+    forwardRef(() => PaymentsModule), // Use forwardRef here
 
     SettingsModule,
 

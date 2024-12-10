@@ -12,6 +12,10 @@ export class DomainMapper {
 
     domainEntity.status = raw.status;
 
+    domainEntity.current_highest_bid = raw.current_highest_bid;
+
+    domainEntity.status = raw.status;
+
     if (raw.category) {
       domainEntity.category = raw.category;
     }

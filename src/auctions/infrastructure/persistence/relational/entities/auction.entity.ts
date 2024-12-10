@@ -32,7 +32,7 @@ export class AuctionEntity extends EntityRelationalHelper {
   reserve_price: number;
 
   @Column({
-    nullable: true,
+    nullable: false,
     type: 'decimal',
     precision: 18,
     scale: 2,
@@ -40,7 +40,7 @@ export class AuctionEntity extends EntityRelationalHelper {
   lease_price: number;
 
   @Column({
-    nullable: true,
+    nullable: false,
     type: 'decimal',
     precision: 18,
     scale: 2,
@@ -66,12 +66,6 @@ export class AuctionEntity extends EntityRelationalHelper {
     type: 'timestamp',
   })
   start_time: Date;
-
-  @Column({
-    nullable: true,
-    type: 'timestamp',
-  })
-  payment_created_at?: Date;
 
   @Column({
     nullable: false,
