@@ -39,7 +39,7 @@ export class DnsSettingsEntity extends EntityRelationalHelper {
     enum: ['CREATED', 'ACCEPTED', 'CANCELLED', 'PENDING'],
     default: 'CREATED',
   })
-  transfer_status: 'CREATED' | 'ACCEPTED' | 'CANCELLED';
+  transfer_status: 'CREATED' | 'ACCEPTED' | 'CANCELLED' | 'PENDING';
 
   @Column({ type: 'boolean', default: false })
   ownership_transferred: boolean;
