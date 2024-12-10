@@ -118,21 +118,18 @@ export class AuctionsController {
   })
   async findAuctionActiveDomains(
     @Query() query: FindAllAuctionsDto,
-  ): Promise<InfinityPaginationResponseDto<Auction>> {
+  ): Promise<any> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
       limit = 50;
     }
 
-    return infinityPagination(
-      await this.auctionsService.findActiveDomains({
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
+    return await this.auctionsService.findActiveDomains({
+      paginationOptions: {
+        page,
+        limit,
+      },
+    });
   }
 }

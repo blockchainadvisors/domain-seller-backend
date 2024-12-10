@@ -31,5 +31,5 @@ export abstract class AuctionRepository {
     paginationOptions,
   }: {
     paginationOptions: IPaginationOptions;
-  }): Promise<any[]>;
+  }): Promise<{ data: any[]; total: number }>;
 }

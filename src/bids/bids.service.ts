@@ -26,6 +26,7 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
 import { PaymentsService } from '../payments/payments.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class BidsService {
@@ -44,6 +45,8 @@ export class BidsService {
     private mailService: MailService,
 
     private readonly configService: ConfigService<AllConfigType>,
+
+    private readonly settingsService: SettingsService,
 
     // Dependencies here
     private readonly bidRepository: BidRepository,
@@ -360,7 +363,12 @@ export class BidsService {
         });
       }
 
-      const leaseValue = Number(auction_id.lease_price) * 0.8;
+      const settingsKey = 'LEASE_PRICE_THRESHOLD_PERCENTAGE';
+      const settingsConfig = await this.settingsService.findByKey(settingsKey);
+
+      const leaseThreshold = Number(settingsConfig?.value) / 100 || 80;
+
+      const leaseValue = Number(auction_id.lease_price) * leaseThreshold;
 
       // // **Fetch the previous highest bid within the current auction**
       const previousHighestBid = await this.bidRepository.findHighestBidder(

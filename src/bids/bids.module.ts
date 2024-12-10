@@ -7,6 +7,7 @@ import { RelationalBidPersistenceModule } from './infrastructure/persistence/rel
 import { AuctionsModule } from '../auctions/auctions.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { MailModule } from '../mail/mail.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -15,6 +16,8 @@ import { MailModule } from '../mail/mail.module';
     DomainsModule,
 
     PaymentsModule,
+
+    SettingsModule,
 
     forwardRef(() => AuctionsModule),
 

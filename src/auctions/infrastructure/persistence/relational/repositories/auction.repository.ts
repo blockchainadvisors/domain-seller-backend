@@ -90,7 +90,15 @@ export class AuctionRelationalRepository implements AuctionRepository {
     return entities.map((entity) => AuctionMapper.toDomain(entity));
   }
 
-  async findActiveDomainsWithDetails(): Promise<any[]> {
+  async findActiveDomainsWithDetails({
+    paginationOptions,
+  }: {
+    paginationOptions: IPaginationOptions;
+  }): Promise<{ data: any[]; total: number }> {
+    const { page, limit } = paginationOptions;
+    const skip = (page - 1) * limit;
+
+    // Query for paginated results
     const auctions = await this.auctionRepository
       .createQueryBuilder('auction')
       .leftJoinAndSelect('domain', 'domain', 'domain.id = auction.domain_id') // Join domain table
@@ -104,20 +112,34 @@ export class AuctionRelationalRepository implements AuctionRepository {
         'auction.lease_price AS lease_price',
         'COALESCE(MAX(bid.amount), 0) AS current_highest_bid', // Get highest bid
         'COUNT(bid.id) AS total_bids', // Count total bids
+        'auction.end_time AS end_time',
       ])
       .where('auction.status = :status', { status: 'ACTIVE' })
       .groupBy('auction.id, domain.id')
+      .orderBy('auction.end_time', 'ASC') // Optional: Order by end_time or any other field
+      .skip(skip)
+      .take(limit)
       .getRawMany();
 
-    return auctions.map((auction) => ({
-      id: auction.id,
-      current_highest_bid: auction.current_highest_bid,
-      total_bids: parseInt(auction.total_bids, 10),
-      lease_price: auction.lease_price,
-      status: auction.status,
-      category: auction.category,
-      description: auction.description,
-      url: auction.url,
-    }));
+    // Query for total count
+    const total = await this.auctionRepository
+      .createQueryBuilder('auction')
+      .where('auction.status = :status', { status: 'ACTIVE' })
+      .getCount();
+
+    return {
+      data: auctions.map((auction) => ({
+        id: auction.id,
+        current_highest_bid: auction.current_highest_bid,
+        total_bids: parseInt(auction.total_bids, 10),
+        lease_price: auction.lease_price,
+        status: auction.status,
+        category: auction.category,
+        description: auction.description,
+        url: auction.url,
+        end_time: auction.end_time,
+      })),
+      total,
+    };
   }
 }

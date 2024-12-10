@@ -165,10 +165,9 @@ export class PaymentsService {
         payment.bid_id.auction_id.id,
         'PAYMENT_COMPLETED',
       );
-      await this.domainService.updateStatus(
-        payment.bid_id.id,
-        'PAYMENT_COMPLETED',
-      );
+      await this.domainService.update(payment.bid_id.id, {
+        status: 'PAYMENT_COMPLETED',
+      });
     } else {
       await this.paymentRepository.update(paymentId, { status: 'FAILED' });
       await this.auctionService.updateStatus(
