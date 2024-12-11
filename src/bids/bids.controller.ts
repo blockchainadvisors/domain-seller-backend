@@ -48,8 +48,9 @@ export class BidsController {
   @ApiCreatedResponse({
     type: Bid,
   })
-  create(@Body() createBidDto: CreateBidDto) {
-    return this.bidsService.create(createBidDto);
+  create(@Body() createBidDto: CreateBidDto, @Request() req) {
+    const user_id: string = req.user?.id;
+    return this.bidsService.create(createBidDto, user_id);
   }
 
   @Get()

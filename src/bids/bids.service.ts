@@ -57,13 +57,21 @@ export class BidsService {
       };
   }
 
-  async create(createBidDto: CreateBidDto) {
+  async create(createBidDto: CreateBidDto, retrieved_user_id: string) {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const manager = queryRunner.manager;
+
+      //validate user details
+      if (createBidDto.user_id != retrieved_user_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { user_id: 'userIdMismatch' },
+        });
+      }
 
       // **Validate and fetch related entities**
       const user_id = await this.userService.findById(createBidDto.user_id);
@@ -91,6 +99,13 @@ export class BidsService {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: { auction_id: 'notExists' },
+        });
+      }
+
+      if (auction_id.domain_id.id != createBidDto.domain_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'domainIdMisMatch' },
         });
       }
 

@@ -61,6 +61,15 @@ export class AuctionsService {
       });
     }
 
+    if (domain.status != 'LISTED') {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          domain_id: 'domainNotValidtobeAuctioned',
+        },
+      });
+    }
+
     await this.domainService.update(domain.id, {
       status: 'AUCTION_PENDING',
       current_highest_bid: 0,
