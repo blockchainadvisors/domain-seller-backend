@@ -51,8 +51,11 @@ import { SettingsModule } from './settings/settings.module';
 
 import { DnsSettingsModule } from './dns-settings/dns-settings.module';
 
+import { OffersModule } from './offers/offers.module';
+
 @Module({
   imports: [
+    OffersModule,
     DnsSettingsModule,
     SettingsModule,
     NotificationsModule,

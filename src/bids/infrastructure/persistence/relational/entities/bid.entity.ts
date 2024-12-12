@@ -28,6 +28,20 @@ export class BidEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({
+    nullable: false,
+    type: String,
+  })
+  created_by_method?: string;
+
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  current_bid: number;
+
   @ManyToOne(() => UserEntity, { eager: true })
   @JoinColumn({ name: 'user_id' })
   user_id: UserEntity;

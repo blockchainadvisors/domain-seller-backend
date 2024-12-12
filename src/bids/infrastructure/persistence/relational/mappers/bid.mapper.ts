@@ -9,6 +9,8 @@ export class BidMapper {
     const domainEntity = new Bid();
 
     domainEntity.amount = raw.amount;
+
+    domainEntity.current_bid = raw.current_bid;
     domainEntity.id = raw.id;
     domainEntity.created_at = raw.created_at;
     domainEntity.updated_at = raw.updated_at;
@@ -44,6 +46,8 @@ export class BidMapper {
         end_time: auction.end_time,
         status: auction.status,
         current_winner: auction.current_winner,
+        highest_bid: auction.highest_bid,
+        current_bid: auction.current_bid,
       };
     }
 
@@ -53,6 +57,7 @@ export class BidMapper {
   static toPersistence(domainEntity: Bid): BidEntity {
     const persistenceEntity = new BidEntity();
     persistenceEntity.amount = domainEntity.amount;
+    persistenceEntity.current_bid = domainEntity.current_bid;
 
     let user: UserEntity | undefined = undefined;
     if (domainEntity.user_id) {

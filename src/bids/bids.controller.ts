@@ -94,6 +94,8 @@ export class BidsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -107,6 +109,8 @@ export class BidsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -120,8 +124,7 @@ export class BidsController {
 
   @Get('/users/my-bids')
   @ApiBearerAuth()
-  @Roles(RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     type: InfinityPaginationResponse(Bid),
   })

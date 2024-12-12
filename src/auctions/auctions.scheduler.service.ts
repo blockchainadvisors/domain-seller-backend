@@ -210,7 +210,10 @@ export class AuctionSchedulerService implements OnModuleInit {
       this.logger.log(
         `Auction ${auction.id} failed due to no valid bids meeting the reserve price.`,
       );
-      await this.domainService.updateStatus(auction.domain_id.id, 'LISTED');
+      await this.domainService.update(auction.domain_id.id, {
+        status: 'LISTED',
+        current_highest_bid: 0,
+      });
     }
   }
 

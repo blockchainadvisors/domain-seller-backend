@@ -27,6 +27,9 @@ import {
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllAuctionsDto } from './dto/find-all-auctions.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { RoleEnum } from '../roles/roles.enum';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
 
 @ApiTags('Auctions')
 @Controller({
@@ -38,7 +41,8 @@ export class AuctionsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiCreatedResponse({
     type: Auction,
   })
@@ -48,7 +52,8 @@ export class AuctionsController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiOkResponse({
     type: InfinityPaginationResponse(Auction),
   })
@@ -73,6 +78,9 @@ export class AuctionsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -87,7 +95,8 @@ export class AuctionsController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -102,7 +111,8 @@ export class AuctionsController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,

@@ -82,6 +82,8 @@ export class DomainsService {
       description: updateDomainDto.description,
 
       url: updateDomainDto.url,
+      registration_date: updateDomainDto.registration_date,
+      renewal_price: updateDomainDto.renewal_price,
     });
   }
 

@@ -13,6 +13,10 @@ export class AuctionMapper {
 
     domainEntity.lease_price = raw.lease_price;
 
+    domainEntity.current_bid = raw.current_bid;
+
+    domainEntity.highest_bid = raw.highest_bid;
+
     domainEntity.min_price = raw.min_price;
 
     domainEntity.status = raw.status;
@@ -43,6 +47,10 @@ export class AuctionMapper {
     persistenceEntity.reserve_price = domainEntity.reserve_price;
 
     persistenceEntity.lease_price = domainEntity.lease_price;
+
+    persistenceEntity.current_bid = domainEntity.current_bid;
+
+    persistenceEntity.highest_bid = domainEntity.highest_bid;
 
     persistenceEntity.expiry_duration = domainEntity.expiry_duration;
 

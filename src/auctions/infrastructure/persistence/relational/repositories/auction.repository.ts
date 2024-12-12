@@ -107,6 +107,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
         'domain.category AS category',
         'domain.description AS description',
         'auction.lease_price AS lease_price',
+        'auction.current_bid AS current_bid',
         'COALESCE(MAX(bid.amount), 0) AS current_highest_bid', // Get highest bid
         'COUNT(bid.id) AS total_bids', // Count total bids
         'auction.end_time AS end_time',
@@ -127,7 +128,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
     return {
       data: auctions.map((auction) => ({
         id: auction.id,
-        current_highest_bid: auction.current_highest_bid,
+        current_highest_bid: auction.highest_bid,
         total_bids: parseInt(auction.total_bids, 10),
         lease_price: auction.lease_price,
         status: auction.status,
@@ -136,6 +137,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
         url: auction.url,
         end_time: auction.end_time,
         domain_id: auction.domain_id,
+        current_bid: auction.current_bid,
       })),
       total,
     };

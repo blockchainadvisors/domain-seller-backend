@@ -12,6 +12,13 @@ export class Bid {
   @Expose() // Expose this field in the transformation
   amount: number;
 
+  @ApiProperty({
+    type: () => Number,
+    nullable: true,
+  })
+  @Expose() // Expose this field in the transformation
+  current_bid: number;
+
   @ApiProperty()
   @Expose() // Expose this field in the transformation
   user_id: Pick<User, 'id' | 'email' | 'first_name' | 'last_name'>;
@@ -30,7 +37,13 @@ export class Bid {
   @Expose() // Expose this field in the transformation
   auction_id: Pick<
     Auction,
-    'id' | 'start_time' | 'end_time' | 'status' | 'current_winner'
+    | 'id'
+    | 'start_time'
+    | 'end_time'
+    | 'status'
+    | 'current_winner'
+    | 'highest_bid'
+    | 'current_bid'
   >;
 
   @ApiProperty()

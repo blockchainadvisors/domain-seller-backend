@@ -10,6 +10,18 @@ export class Auction {
 
   @ApiProperty({
     type: () => Number,
+    nullable: true,
+  })
+  current_bid: number;
+
+  @ApiProperty({
+    type: () => Number,
+    nullable: true,
+  })
+  highest_bid: number;
+
+  @ApiProperty({
+    type: () => Number,
     nullable: false,
   })
   reserve_price: number;

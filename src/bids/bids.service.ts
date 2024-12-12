@@ -109,10 +109,10 @@ export class BidsService {
         });
       }
 
-      // // **Fetch the previous highest bid within the current auction**
-      const previousHighestBid = await this.bidRepository.findHighestBidder(
-        auction_id.id,
-      );
+      // // // **Fetch the previous highest bid within the current auction**
+      // const previousHighestBid = await this.bidRepository.findHighestBidder(
+      //   auction_id.id,
+      // );
 
       // **Auction time validation**
       const currentTime = new Date();
@@ -133,26 +133,14 @@ export class BidsService {
         });
       }
 
-      // **Reserve price check if it's the first bid**
-      if (
-        (domain_id.current_highest_bid === null ||
-          Number(domain_id.current_highest_bid) === 0) &&
-        createBidDto.amount <= Number(auction_id.min_price)
-      ) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            amount: 'mustBeGreaterThanMinimumPrice',
-            reservePrice: auction_id.min_price,
-          },
-        });
-      }
-
-      // **Bid amount validation**
+      // **Bid amount validation**//
       const minIncrement = Number(auction_id.min_increment) || 0;
-      const currentHighestBid = Number(domain_id.current_highest_bid) || 0;
+      const currentHighestBid = Number(auction_id.current_bid) || 0;
 
-      if (createBidDto.amount <= currentHighestBid + minIncrement) {
+      if (
+        createBidDto.amount <=
+        Number(auction_id.current_bid) + minIncrement
+      ) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
@@ -164,55 +152,114 @@ export class BidsService {
       }
 
       // **Create bid**: Now that user_id, domain_id, and auction_id are resolved, create the bid entity
-      const newBid = manager.create(BidEntity, {
-        amount: createBidDto.amount,
-        user_id: user_id as UserEntity,
-        domain_id: domain_id as DomainEntity,
-        auction_id: auction_id as AuctionEntity,
-      });
 
-      // Save the new bid
-      await manager.save(newBid);
+      const bid_count = this.bidRepository.findCountByAuctionId(auction_id.id);
+      if (Number(bid_count) === 0) {
+        // **Update domain status if it's the first bid**
+        const domainRepository =
+          queryRunner.manager.getRepository(DomainEntity);
+        await domainRepository.update(domain_id.id, {
+          current_highest_bid: createBidDto.amount,
+          status: 'BID_RECEIVED',
+        });
 
-      // **Update domain status if it's the first bid**
-      const domainRepository = queryRunner.manager.getRepository(DomainEntity);
-      await domainRepository.update(domain_id.id, {
-        current_highest_bid: createBidDto.amount,
-        status: domain_id.current_highest_bid
-          ? domain_id.status
-          : 'BID_RECEIVED',
-      });
+        // **Update domain status if it's the first bid**
+        const auctionRepository =
+          queryRunner.manager.getRepository(AuctionEntity);
+        await auctionRepository.update(auction_id.id, {
+          status: 'ACTIVE',
+          current_bid: auction_id.min_price,
+          highest_bid: createBidDto.amount,
+          current_winner: retrieved_user_id,
+        });
 
-      // **Update domain status if it's the first bid**
-      const auctionRepository =
-        queryRunner.manager.getRepository(AuctionEntity);
-      await auctionRepository.update(auction_id.id, {
-        status: domain_id.current_highest_bid ? auction_id.status : 'ACTIVE',
-      });
+        const newBid = manager.create(BidEntity, {
+          amount: createBidDto.amount,
+          user_id: user_id as UserEntity,
+          domain_id: domain_id as DomainEntity,
+          auction_id: auction_id as AuctionEntity,
+          created_by_method: 'USER',
+          current_bid: auction_id.min_price,
+        });
+        // Save the new bid
+        await manager.save(newBid);
+      } else {
+        //check current_max_bid(30.5)  is higher more than the current_winner_max_bid(30)
+
+        if (createBidDto.amount > Number(auction_id.highest_bid)) {
+          const mx1 =
+            Number(auction_id.highest_bid) + Number(auction_id.min_increment);
+          const mx2 = Number(createBidDto.amount);
+
+          // **Update domain status if it's the first bid**
+          const auctionRepository =
+            queryRunner.manager.getRepository(AuctionEntity);
+          await auctionRepository.update(auction_id.id, {
+            current_bid: Math.min(mx1, mx2),
+            highest_bid: createBidDto.amount,
+            current_winner: retrieved_user_id,
+          });
+
+          const newBid = manager.create(BidEntity, {
+            amount: createBidDto.amount,
+            user_id: user_id as UserEntity,
+            domain_id: domain_id as DomainEntity,
+            auction_id: auction_id as AuctionEntity,
+            created_by_method: 'USER',
+            current_bid: Math.min(mx1, mx2),
+          });
+          // Save the new bid
+          await manager.save(newBid);
+          const previous_highest_user = await this.userService.findById(
+            auction_id.current_winner!,
+          );
+          if (!previous_highest_user) {
+            throw new UnprocessableEntityException({
+              status: HttpStatus.UNPROCESSABLE_ENTITY,
+              errors: { user_id: 'notExists' },
+            });
+          }
+          void this.mailService.outBid({
+            to: previous_highest_user.email!,
+            data: {
+              domaiName: domain_id.url,
+              userBidAmount: auction_id.highest_bid, // This is the previous highest bid amount
+              auctionEndTime: auction_id.end_time,
+              currentHighestBid: createBidDto.amount, // This is the new current bid amount
+              firstName: previous_highest_user.first_name ?? 'User',
+            },
+          });
+        } else {
+          const mx1 =
+            Number(createBidDto.amount) + Number(auction_id.min_increment);
+          const mx2 = Number(auction_id.highest_bid);
+
+          // **Update domain status if it's the first bid**
+          const auctionRepository =
+            queryRunner.manager.getRepository(AuctionEntity);
+          await auctionRepository.update(auction_id.id, {
+            current_bid: Math.min(mx1, mx2),
+          });
+
+          const newBid = manager.create(BidEntity, {
+            amount: createBidDto.amount,
+            user_id: user_id as UserEntity,
+            domain_id: domain_id as DomainEntity,
+            auction_id: auction_id as AuctionEntity,
+            created_by_method: 'USER',
+            current_bid: Math.min(mx1, mx2),
+          });
+          // Save the new bid
+          await manager.save(newBid);
+        }
+      }
 
       // **Commit the transaction**
       await queryRunner.commitTransaction();
-
-      // **Send email to the previous highest bidder if they exist**
-      // **Check if there was a previous highest bid**
-      if (previousHighestBid && previousHighestBid.user_id.email) {
-        console.log(previousHighestBid);
-        void this.mailService.outBid({
-          to: previousHighestBid.user_id.email,
-          data: {
-            domaiName: domain_id.url,
-            userBidAmount: previousHighestBid.amount, // This is the previous highest bid amount
-            auctionEndTime: auction_id.end_time,
-            currentHighestBid: createBidDto.amount, // This is the new current bid amount
-            firstName: previousHighestBid.user_id.first_name ?? 'User',
-          },
-        });
-      }
-
       // **Refetch to get updated data with limited fields**
-      const createdBid = await this.bidRepository.findById(newBid.id);
+      // const createdBid = await this.bidRepository.findById(newBid.id);
 
-      return createdBid;
+      return { message: 'Successful' };
     } catch (error) {
       // **Rollback the transaction in case of error**
       await queryRunner.rollbackTransaction();
@@ -276,27 +323,31 @@ export class BidsService {
     return bids.map((bid) => {
       const { auction_id, user_id, domain_id, ...otherBidFields } = bid;
       const { status, ...otherAuctionFields } = auction_id; // Exclude only `status`
-      const { current_winner } = auction_id;
+      const { current_winner, current_bid } = auction_id;
+      const { amount } = bid;
 
-      let bid_status: string;
-
+      let auction_status: string;
+      const bid_status =
+        Number(amount) > Number(current_bid) && user_id.id === current_winner
+          ? 'WINNING'
+          : 'OUT_BIDDED';
       switch (status) {
         case 'ACTIVE':
-          bid_status = 'ACTIVE';
+          auction_status = 'ACTIVE';
           break;
         case 'FAILED':
         case 'ENDED':
         case 'LEASE_PENDING':
-          bid_status = 'ENDED';
+          auction_status = 'ENDED';
           break;
         case 'PAYMENT_PROCESSING':
         case 'PAYMENT_PENDING':
         case 'PAYMENT_COMPLETED':
         case 'PAYMENT_FAILED':
-          bid_status = current_winner === user_id.id ? status : 'ENDED';
+          auction_status = current_winner === user_id.id ? status : 'ENDED';
           break;
         default:
-          bid_status = 'UNKNOWN';
+          auction_status = 'UNKNOWN';
       }
 
       return {
@@ -304,6 +355,7 @@ export class BidsService {
         auction_id: {
           ...otherAuctionFields,
         },
+        auction_status,
         bid_status,
         url: domain_id.url,
         domain_id: domain_id.id,
@@ -373,6 +425,21 @@ export class BidsService {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: { auction_id: 'leaseOngoing' },
+        });
+      }
+
+      const currentTime = new Date();
+      if (auction_id.start_time && currentTime < auction_id.start_time) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction: 'notStarted' },
+        });
+      }
+
+      if (auction_id.end_time && currentTime > auction_id.end_time) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction: 'hasEnded' },
         });
       }
 

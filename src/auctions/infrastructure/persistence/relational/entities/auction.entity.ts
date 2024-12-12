@@ -32,6 +32,22 @@ export class AuctionEntity extends EntityRelationalHelper {
   reserve_price: number;
 
   @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  current_bid: number;
+
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+  })
+  highest_bid: number;
+
+  @Column({
     nullable: false,
     type: 'decimal',
     precision: 18,

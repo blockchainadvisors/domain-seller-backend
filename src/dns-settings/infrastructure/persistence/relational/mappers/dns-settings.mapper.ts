@@ -54,6 +54,10 @@ export class DnsSettingsMapper {
           id: bid.auction_id.id,
           start_time: bid.auction_id.start_time,
           end_time: bid.auction_id.end_time,
+          status: bid.auction_id.status,
+          current_winner: bid.auction_id.current_winner,
+          highest_bid: bid.auction_id.highest_bid,
+          current_bid: bid.auction_id.current_bid,
         },
         user_id: {
           id: bid.user_id.id,
