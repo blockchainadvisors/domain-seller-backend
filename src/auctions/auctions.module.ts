@@ -11,10 +11,13 @@ import { SettingsModule } from '../settings/settings.module';
 
 import { BidsModule } from '../bids/bids.module';
 
+import { UsersModule } from '../users/users.module';
+
 @Module({
   imports: [
     DomainsModule,
     SettingsModule,
+    UsersModule,
     forwardRef(() => PaymentsModule), // Use forwardRef here
     forwardRef(() => BidsModule), // Keep BidsModule as forwardRef
     RelationalAuctionPersistenceModule,

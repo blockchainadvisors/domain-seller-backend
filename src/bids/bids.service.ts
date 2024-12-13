@@ -137,10 +137,7 @@ export class BidsService {
       const minIncrement = Number(auction_id.min_increment) || 0;
       const currentHighestBid = Number(auction_id.current_bid) || 0;
 
-      if (
-        createBidDto.amount <=
-        Number(auction_id.current_bid) + minIncrement
-      ) {
+      if (createBidDto.amount < Number(auction_id.current_bid) + minIncrement) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
@@ -153,24 +150,16 @@ export class BidsService {
 
       // **Create bid**: Now that user_id, domain_id, and auction_id are resolved, create the bid entity
 
-      const bid_count = this.bidRepository.findCountByAuctionId(auction_id.id);
+      const bid_count = await this.bidRepository.findCountByAuctionId(
+        auction_id.id,
+      );
       if (Number(bid_count) === 0) {
         // **Update domain status if it's the first bid**
         const domainRepository =
           queryRunner.manager.getRepository(DomainEntity);
         await domainRepository.update(domain_id.id, {
-          current_highest_bid: createBidDto.amount,
+          current_highest_bid: auction_id.min_price,
           status: 'BID_RECEIVED',
-        });
-
-        // **Update domain status if it's the first bid**
-        const auctionRepository =
-          queryRunner.manager.getRepository(AuctionEntity);
-        await auctionRepository.update(auction_id.id, {
-          status: 'ACTIVE',
-          current_bid: auction_id.min_price,
-          highest_bid: createBidDto.amount,
-          current_winner: retrieved_user_id,
         });
 
         const newBid = manager.create(BidEntity, {
@@ -183,6 +172,16 @@ export class BidsService {
         });
         // Save the new bid
         await manager.save(newBid);
+        // **Update domain status if it's the first bid**
+        const auctionRepository =
+          queryRunner.manager.getRepository(AuctionEntity);
+        await auctionRepository.update(auction_id.id, {
+          status: 'ACTIVE',
+          current_bid: auction_id.min_price,
+          highest_bid: createBidDto.amount,
+          current_winner: retrieved_user_id,
+          winning_bid_id: newBid.id,
+        });
       } else {
         //check current_max_bid(30.5)  is higher more than the current_winner_max_bid(30)
 
@@ -191,15 +190,7 @@ export class BidsService {
             Number(auction_id.highest_bid) + Number(auction_id.min_increment);
           const mx2 = Number(createBidDto.amount);
 
-          // **Update domain status if it's the first bid**
-          const auctionRepository =
-            queryRunner.manager.getRepository(AuctionEntity);
-          await auctionRepository.update(auction_id.id, {
-            current_bid: Math.min(mx1, mx2),
-            highest_bid: createBidDto.amount,
-            current_winner: retrieved_user_id,
-          });
-
+          // Save the new bid
           const newBid = manager.create(BidEntity, {
             amount: createBidDto.amount,
             user_id: user_id as UserEntity,
@@ -208,27 +199,44 @@ export class BidsService {
             created_by_method: 'USER',
             current_bid: Math.min(mx1, mx2),
           });
-          // Save the new bid
+
           await manager.save(newBid);
+
+          // **Update action**
+          const auctionRepository =
+            queryRunner.manager.getRepository(AuctionEntity);
+          await auctionRepository.update(auction_id.id, {
+            current_bid: Math.min(mx1, mx2),
+            highest_bid: createBidDto.amount,
+            current_winner: retrieved_user_id,
+            winning_bid_id: newBid.id,
+          });
+
+          // update domain table
+          const domainRepository =
+            queryRunner.manager.getRepository(DomainEntity);
+          await domainRepository.update(domain_id.id, {
+            current_highest_bid: Math.min(mx1, mx2),
+          });
+
+          // send email to prvious winner
           const previous_highest_user = await this.userService.findById(
             auction_id.current_winner!,
           );
           if (!previous_highest_user) {
-            throw new UnprocessableEntityException({
-              status: HttpStatus.UNPROCESSABLE_ENTITY,
-              errors: { user_id: 'notExists' },
+            console.log('No previous winner');
+          } else {
+            void this.mailService.outBid({
+              to: previous_highest_user.email!,
+              data: {
+                domaiName: domain_id.url,
+                userBidAmount: auction_id.highest_bid, // This is the previous highest bid amount
+                auctionEndTime: auction_id.end_time,
+                currentHighestBid: createBidDto.amount, // This is the new current bid amount
+                firstName: previous_highest_user.first_name ?? 'User',
+              },
             });
           }
-          void this.mailService.outBid({
-            to: previous_highest_user.email!,
-            data: {
-              domaiName: domain_id.url,
-              userBidAmount: auction_id.highest_bid, // This is the previous highest bid amount
-              auctionEndTime: auction_id.end_time,
-              currentHighestBid: createBidDto.amount, // This is the new current bid amount
-              firstName: previous_highest_user.first_name ?? 'User',
-            },
-          });
         } else {
           const mx1 =
             Number(createBidDto.amount) + Number(auction_id.min_increment);
@@ -251,6 +259,12 @@ export class BidsService {
           });
           // Save the new bid
           await manager.save(newBid);
+          // update domain table
+          const domainRepository =
+            queryRunner.manager.getRepository(DomainEntity);
+          await domainRepository.update(domain_id.id, {
+            current_highest_bid: Math.min(mx1, mx2),
+          });
         }
       }
 
@@ -336,6 +350,8 @@ export class BidsService {
           auction_status = 'ACTIVE';
           break;
         case 'FAILED':
+          auction_status = 'CANCELLED';
+          break;
         case 'ENDED':
         case 'LEASE_PENDING':
           auction_status = 'ENDED';

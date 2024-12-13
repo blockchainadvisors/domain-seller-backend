@@ -68,13 +68,9 @@ export class AuctionsService {
       });
     }
 
-    await this.domainService.update(domain.id, {
-      status: 'AUCTION_PENDING',
-      current_highest_bid: 0,
-    });
     const status = 'DRAFT';
     // Create the auction
-    return this.auctionRepository.create({
+    const createAuction = this.auctionRepository.create({
       min_increment: createAuctionDto.min_increment,
       min_price: createAuctionDto.min_price,
       reserve_price: createAuctionDto.reserve_price,
@@ -87,6 +83,13 @@ export class AuctionsService {
       current_bid: createAuctionDto.min_price,
       highest_bid: createAuctionDto.min_price,
     });
+
+    await this.domainService.update(domain.id, {
+      status: 'AUCTION_PENDING',
+      current_highest_bid: 0,
+    });
+
+    return createAuction;
   }
 
   findAllWithPagination({
@@ -206,5 +209,9 @@ export class AuctionsService {
         limit: paginationOptions.limit,
       },
     });
+  }
+
+  findAvailableDomainDetailsByAuctionId(id: Auction['id']) {
+    return this.auctionRepository.findAvailableDomainDetailsByAuctionId(id);
   }
 }

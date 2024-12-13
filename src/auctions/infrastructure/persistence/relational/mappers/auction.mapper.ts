@@ -33,6 +33,10 @@ export class AuctionMapper {
       domainEntity.current_winner = raw.current_winner;
     }
 
+    if (raw.winning_bid_id) {
+      domainEntity.winning_bid_id = raw.winning_bid_id;
+    }
+
     domainEntity.id = raw.id;
     domainEntity.created_at = raw.created_at;
     domainEntity.updated_at = raw.updated_at;

@@ -12,6 +12,12 @@ export class Payment {
 
   @ApiProperty({
     type: String,
+    nullable: true,
+  })
+  payment_url?: string;
+
+  @ApiProperty({
+    type: String,
     nullable: false,
   })
   status: string;

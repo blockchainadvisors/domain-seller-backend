@@ -8,6 +8,8 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
 import { Auction } from './domain/auction';
 import { Payment } from '../payments/domain/payment';
 import { console } from 'inspector';
+import { UsersService } from '../users/users.service';
+import { BidEntity } from '../bids/infrastructure/persistence/relational/entities/bid.entity';
 
 @Injectable()
 export class AuctionSchedulerService implements OnModuleInit {
@@ -22,12 +24,13 @@ export class AuctionSchedulerService implements OnModuleInit {
     private readonly paymentService: PaymentsService,
     private readonly bidsService: BidsService,
     private readonly settingsService: SettingsService,
+    private readonly userService: UsersService,
   ) {}
 
   onModuleInit() {
     // Trigger initial auction status check on startup
     void this.initAuctionStatusCheck();
-    void this.processPendingPaymentsCheck();
+    // void this.processPendingPaymentsCheck();
   }
 
   private async processPendingPaymentsCheck() {
@@ -81,52 +84,47 @@ export class AuctionSchedulerService implements OnModuleInit {
           this.logger.log(`Auction ${auction.id} ended`);
 
           // Fetch the highest bid
-          const highestBid = await this.bidsService.findHighestBidder(
-            auction.id,
-          );
+          if (
+            Number(auction.current_bid) >= Number(auction.reserve_price) &&
+            auction.current_winner &&
+            auction.winning_bid_id
+          ) {
+            const highestBidder = await this.userService.findById(
+              auction.current_winner,
+            );
 
-          this.logger.log(`highestBid ${highestBid}`);
-          console.log(Number(highestBid?.amount));
-          console.log(Number(auction.reserve_price));
-          if (highestBid) {
-            if (Number(highestBid.amount) >= Number(auction.reserve_price)) {
-              // Create a payment record for the highest bid
-              await this.paymentService.create({
-                user_id: highestBid.user_id as UserEntity,
-                bid_id: highestBid,
-                amount: highestBid.amount,
-                status: 'PENDING',
-              });
-              // await this.auctionService.update(
-              //   auction.id,
-              //   'PAYMENT_PENDING',
-              // );
-              await this.auctionService.update(auction.id, {
-                status: 'PAYMENT_PENDING',
-                current_winner: highestBid.user_id.id,
-              });
-              this.logger.log(
-                `Payment record created for auction ${auction.id}`,
-              );
-            } else {
-              // Highest bid did not meet the reserve price, mark auction as FAILED
-              await this.auctionService.updateStatus(auction.id, 'FAILED');
-              this.logger.log(
-                `Auction ${auction.id} failed as the reserve price was not met`,
-              );
-              await this.domainService.update(auction.domain_id.id, {
-                status: 'LISTED',
-                current_highest_bid: 0,
-              });
-            }
+            const highestBid = await this.bidsService.findById(
+              auction.winning_bid_id,
+            );
+            // Create a payment record for the highest bid
+            await this.paymentService.create({
+              user_id: highestBidder as UserEntity,
+              bid_id: highestBid as BidEntity,
+              amount: auction.current_bid,
+              status: 'PENDING',
+            });
+            // await this.auctionService.update(
+            //   auction.id,
+            //   'PAYMENT_PENDING',
+            // );
+            await this.auctionService.update(auction.id, {
+              status: 'PAYMENT_PENDING',
+            });
+            this.logger.log(`Payment record created for auction ${auction.id}`);
           } else {
-            // No bids received, mark auction as FAILED
+            // Highest bid did not meet the reserve price, mark auction as FAILED
             await this.auctionService.updateStatus(auction.id, 'FAILED');
-            this.logger.log(`Auction ${auction.id} failed due to no bids`);
+            this.logger.log(
+              `Auction ${auction.id} failed as the reserve price was not met`,
+            );
             await this.domainService.update(auction.domain_id.id, {
               status: 'LISTED',
               current_highest_bid: 0,
             });
+
+            this.logger.log(
+              `domain ${auction.domain_id.id} has been updated to listed`,
+            );
           }
         }
       }

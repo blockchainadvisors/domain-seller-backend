@@ -67,6 +67,12 @@ export class Auction {
 
   @ApiProperty({
     type: () => String,
+    nullable: true,
+  })
+  winning_bid_id?: string;
+
+  @ApiProperty({
+    type: () => String,
     nullable: false,
   })
   status?: string;

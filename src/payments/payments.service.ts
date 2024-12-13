@@ -147,6 +147,7 @@ export class PaymentsService {
     await this.paymentRepository.update(paymentId, {
       status: 'PROCESSING',
       stripe_id: session.id,
+      payment_url: session.url || '',
     });
 
     await this.auctionService.updateStatus(

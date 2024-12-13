@@ -32,4 +32,8 @@ export abstract class AuctionRepository {
   }: {
     paginationOptions: IPaginationOptions;
   }): Promise<{ data: any[]; total: number }>;
+
+  abstract findAvailableDomainDetailsByAuctionId(
+    auction_id: Auction['id'],
+  ): Promise<any>;
 }

@@ -142,4 +142,49 @@ export class AuctionRelationalRepository implements AuctionRepository {
       total,
     };
   }
+
+  async findAvailableDomainDetailsByAuctionId(
+    auction_id: string,
+  ): Promise<any> {
+    // Query for a single auction by its ID with associated domain and bid details
+    const auctionDetails = await this.auctionRepository
+      .createQueryBuilder('auction')
+      .leftJoinAndSelect('domain', 'domain', 'domain.id = auction.domain_id') // Join domain table
+      .leftJoin('bid', 'bid', 'bid.auction_id = auction.id') // Join bids using auction_id
+      .select([
+        'auction.id AS id',
+        'auction.status AS status',
+        'domain.url AS url',
+        'domain.id AS domain_id',
+        'domain.category AS category',
+        'domain.description AS description',
+        'auction.lease_price AS lease_price',
+        'auction.current_bid AS current_bid',
+        'COALESCE(MAX(bid.amount), 0) AS current_highest_bid', // Get highest bid
+        'COUNT(bid.id) AS total_bids', // Count total bids
+        'auction.end_time AS end_time',
+      ])
+      .where('auction.id = :auction_id', { auction_id }) // Filter by auction ID
+      .groupBy('auction.id, domain.id')
+      .getRawOne(); // Retrieve a single result
+
+    // Transform result into the desired format
+    if (!auctionDetails) {
+      throw new Error('Auction not found');
+    }
+
+    return {
+      id: auctionDetails.id,
+      current_highest_bid: auctionDetails.current_highest_bid,
+      total_bids: parseInt(auctionDetails.total_bids, 10),
+      lease_price: auctionDetails.lease_price,
+      status: auctionDetails.status,
+      category: auctionDetails.category,
+      description: auctionDetails.description,
+      url: auctionDetails.url,
+      end_time: auctionDetails.end_time,
+      domain_id: auctionDetails.domain_id,
+      current_bid: auctionDetails.current_bid,
+    };
+  }
 }

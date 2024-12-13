@@ -142,4 +142,12 @@ export class AuctionsController {
       },
     });
   }
+
+  @Get('/available/domain/:id')
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Auction),
+  })
+  async findAuctionActiveDomainsById(@Param('id') id: string): Promise<any> {
+    return this.auctionsService.findAvailableDomainDetailsByAuctionId(id);
+  }
 }

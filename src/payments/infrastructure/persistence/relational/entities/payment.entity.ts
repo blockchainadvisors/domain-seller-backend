@@ -28,6 +28,12 @@ export class PaymentEntity extends EntityRelationalHelper {
   stripe_id?: string | null;
 
   @Column({
+    nullable: true,
+    type: String,
+  })
+  payment_url?: string | null;
+
+  @Column({
     nullable: false,
     type: 'decimal',
     precision: 18, // Allows larger values

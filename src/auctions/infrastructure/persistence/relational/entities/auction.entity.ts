@@ -6,8 +6,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   JoinColumn,
-  OneToOne,
   Column,
+  ManyToOne,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
@@ -95,9 +95,18 @@ export class AuctionEntity extends EntityRelationalHelper {
   })
   current_winner?: string;
 
-  @OneToOne(() => DomainEntity, { eager: true, nullable: false })
+  @ManyToOne(() => DomainEntity, (domain) => domain.auction, {
+    eager: true,
+    nullable: false,
+  })
   @JoinColumn({ name: 'domain_id' })
   domain_id: DomainEntity;
+
+  @Column({
+    nullable: true,
+    type: String,
+  })
+  winning_bid_id?: string;
 
   @PrimaryGeneratedColumn('uuid')
   id: string;
