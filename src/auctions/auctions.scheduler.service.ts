@@ -102,6 +102,7 @@ export class AuctionSchedulerService implements OnModuleInit {
               bid_id: highestBid as BidEntity,
               amount: auction.current_bid,
               status: 'PENDING',
+              auction_id: auction,
             });
             // await this.auctionService.update(
             //   auction.id,
@@ -194,6 +195,7 @@ export class AuctionSchedulerService implements OnModuleInit {
         bid_id: nextHighestBid,
         amount: nextHighestBid.amount,
         status: 'PENDING',
+        auction_id: auction,
       });
       await this.auctionService.update(auction.id, {
         current_winner: nextHighestBid.user_id.id,

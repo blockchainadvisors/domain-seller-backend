@@ -28,9 +28,6 @@ import {
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 
-@ApiTags('Payments')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'payments',
   version: '1',
@@ -39,6 +36,9 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiCreatedResponse({
     type: Payment,
   })
@@ -47,6 +47,9 @@ export class PaymentsController {
   }
 
   @Get()
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     type: InfinityPaginationResponse(Payment),
   })
@@ -71,6 +74,9 @@ export class PaymentsController {
   }
 
   @Get(':id')
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -84,6 +90,9 @@ export class PaymentsController {
   }
 
   @Patch(':id')
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -97,6 +106,9 @@ export class PaymentsController {
   }
 
   @Delete(':id')
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'id',
     type: String,
@@ -107,6 +119,9 @@ export class PaymentsController {
   }
 
   @Get('user/:userId')
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'userId',
     type: String,
@@ -135,6 +150,9 @@ export class PaymentsController {
   }
 
   @Post('initiate-payment/:paymentId')
+  @ApiTags('Payments')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({
     name: 'paymentId',
     type: String,

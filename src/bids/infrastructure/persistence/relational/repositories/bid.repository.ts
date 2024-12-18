@@ -37,6 +37,25 @@ export class BidRelationalRepository implements BidRepository {
     return entities.map((entity) => BidMapper.toDomain(entity));
   }
 
+  // async findMyBidWithPagination(
+  //   {
+  //     paginationOptions,
+  //   }: {
+  //     paginationOptions: IPaginationOptions;
+  //   },
+  //   user_id: string,
+  // ): Promise<Bid[]> {
+  //   const entities = await this.bidRepository.find({
+  //     where: { user_id: { id: user_id } },
+  //     skip: (paginationOptions.page - 1) * paginationOptions.limit,
+  //     take: paginationOptions.limit,
+  //   });
+
+  //   console.log(entities)
+
+  //   return entities.map((entity) => BidMapper.toDomain(entity));
+  // }
+
   async findMyBidWithPagination(
     {
       paginationOptions,
@@ -45,13 +64,35 @@ export class BidRelationalRepository implements BidRepository {
     },
     user_id: string,
   ): Promise<Bid[]> {
-    const entities = await this.bidRepository.find({
-      where: { user_id: { id: user_id } },
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-    });
+    const { page, limit } = paginationOptions;
+    const skip = (page - 1) * limit;
 
-    return entities.map((entity) => BidMapper.toDomain(entity));
+    // Subquery to find the latest bid per auction for the user
+    const subquery = this.bidRepository
+      .createQueryBuilder('sub_bid')
+      .select('MAX(sub_bid.created_at)', 'latest_bid_time')
+      .addSelect('sub_bid.auction_id', 'auction_id')
+      .where('sub_bid.user_id = :user_id', { user_id })
+      .groupBy('sub_bid.auction_id');
+
+    // Main query to fetch bids
+    const bids = await this.bidRepository
+      .createQueryBuilder('bid')
+      .leftJoinAndSelect('bid.user_id', 'user') // Include UserEntity fields
+      .leftJoinAndSelect('bid.domain_id', 'domain') // Include DomainEntity fields
+      .leftJoinAndSelect('bid.auction_id', 'auction') // Include AuctionEntity fields
+      .innerJoin(
+        '(' + subquery.getQuery() + ')',
+        'latest_bids',
+        'bid.auction_id = latest_bids.auction_id AND bid.created_at = latest_bids.latest_bid_time',
+      )
+      .setParameters(subquery.getParameters())
+      .where('bid.user_id = :user_id', { user_id })
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    return bids.map((entity) => BidMapper.toDomain(entity));
   }
 
   async findById(id: Bid['id']): Promise<NullableType<Bid>> {
@@ -124,6 +165,15 @@ export class BidRelationalRepository implements BidRepository {
   async findCountByAuctionId(auction_id: string): Promise<number> {
     return this.bidRepository.count({
       where: { auction_id: { id: auction_id } },
+    });
+  }
+
+  async countBidByUserIdAuctionId(
+    auction_id: string,
+    user_id: string,
+  ): Promise<number> {
+    return this.bidRepository.count({
+      where: { auction_id: { id: auction_id }, user_id: { id: user_id } },
     });
   }
 }

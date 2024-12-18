@@ -32,7 +32,7 @@ import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { Request } from '@nestjs/common';
 import { CreateLeaseDto } from './dto/create-lease.dto';
-import { Payment } from '../payments/domain/payment';
+import { IncreaseBidDto } from './dto/Increase-bid.dto';
 
 @ApiTags('Bids')
 @Controller({
@@ -133,7 +133,7 @@ export class BidsController {
     @Request() req,
   ): Promise<InfinityPaginationResponseDto<any>> {
     const page = query?.page ?? 1;
-    const userId: string = req.user?.id; //
+    const user_id: string = req.user?.id; //
     let limit = query?.limit ?? 10;
     if (limit > 50) {
       limit = 50;
@@ -147,7 +147,7 @@ export class BidsController {
             limit,
           },
         },
-        userId,
+        user_id,
       ),
       { page, limit },
     );
@@ -157,10 +157,30 @@ export class BidsController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiCreatedResponse({
-    type: Payment,
+    type: Bid,
   })
   leaseNow(@Body() createLeaseDto: CreateLeaseDto, @Request() req) {
     const user_id: string = req.user?.id;
     return this.bidsService.leaseNow(createLeaseDto, user_id);
+  }
+
+  @Patch('increase/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiCreatedResponse({
+    type: Bid,
+  })
+  increaseBid(
+    @Param('id') id: string,
+    @Body() increaseBidDto: IncreaseBidDto,
+    @Request() req,
+  ) {
+    const user_id: string = req.user?.id;
+    return this.bidsService.increaseBid(id, increaseBidDto, user_id);
   }
 }

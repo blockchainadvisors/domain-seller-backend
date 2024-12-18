@@ -2,7 +2,9 @@ import { DomainsService } from '../domains/domains.service';
 
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
@@ -12,11 +14,16 @@ import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionRepository } from './infrastructure/persistence/auction.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { Auction } from './domain/auction';
+import { BidsService } from '../bids/bids.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class AuctionsService {
   constructor(
     private readonly domainService: DomainsService,
+    @Inject(forwardRef(() => BidsService))
+    private readonly bidsService: BidsService,
+    private readonly settingsService: SettingsService,
 
     // Dependencies here
     private readonly auctionRepository: AuctionRepository,
@@ -213,5 +220,44 @@ export class AuctionsService {
 
   findAvailableDomainDetailsByAuctionId(id: Auction['id']) {
     return this.auctionRepository.findAvailableDomainDetailsByAuctionId(id);
+  }
+
+  async validateUserCanMakeRequestOnAuction(
+    id: Auction['id'],
+    user_id: string,
+  ) {
+    const bid_count = await this.bidsService.findCountByAuctionId(id);
+    const is_user_place_bid = await this.bidsService.countBidByUserIdAuctionId(
+      id,
+      user_id,
+    );
+    const settingsKey = 'LEASE_PRICE_THRESHOLD_PERCENTAGE';
+    const settingsConfig = await this.settingsService.findByKey(settingsKey);
+
+    const leaseThreshold = Number(settingsConfig?.value) / 100 || 80;
+
+    const auction = await this.auctionRepository.findById(id);
+    if (!auction) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          id: 'notExists',
+        },
+      });
+    }
+    let canLease = false;
+    let canBid = false;
+    let canMakeOffer = false;
+    const leaseValue = Number(auction.lease_price) * leaseThreshold;
+    if (Number(auction.current_bid) < leaseValue) {
+      canLease = true;
+    }
+    if (Number(bid_count) === 0) {
+      canMakeOffer = true;
+    }
+    if (Number(is_user_place_bid) === 0) {
+      canBid = true;
+    }
+    return { canBid, canLease, canMakeOffer };
   }
 }

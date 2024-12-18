@@ -53,8 +53,11 @@ import { DnsSettingsModule } from './dns-settings/dns-settings.module';
 
 import { OffersModule } from './offers/offers.module';
 
+import { BidLogsModule } from './bid-logs/bid-logs.module';
+
 @Module({
   imports: [
+    BidLogsModule,
     OffersModule,
     DnsSettingsModule,
     SettingsModule,

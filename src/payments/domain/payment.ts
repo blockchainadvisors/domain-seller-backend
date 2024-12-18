@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../users/domain/user';
 import { Bid } from '../../bids/domain/bid';
 import { Expose } from 'class-transformer';
+import { Auction } from '../../auctions/domain/auction';
 
 export class Payment {
   @ApiProperty({
@@ -37,6 +38,19 @@ export class Payment {
   bid_id: Pick<
     Bid,
     'amount' | 'id' | 'domain_id' | 'user_id' | 'auction_id' | 'created_at'
+  >;
+
+  @ApiProperty()
+  @Expose() // Expose this field in the transformation
+  auction_id: Pick<
+    Auction,
+    | 'id'
+    | 'start_time'
+    | 'end_time'
+    | 'status'
+    | 'current_winner'
+    | 'highest_bid'
+    | 'current_bid'
   >;
 
   @ApiProperty({

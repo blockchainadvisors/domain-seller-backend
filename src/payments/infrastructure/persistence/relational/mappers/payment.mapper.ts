@@ -1,3 +1,4 @@
+import { AuctionEntity } from '../../../../../auctions/infrastructure/persistence/relational/entities/auction.entity';
 import { BidEntity } from '../../../../../bids/infrastructure/persistence/relational/entities/bid.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { Payment } from '../../../../domain/payment';
@@ -29,6 +30,19 @@ export class PaymentMapper {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+      };
+    }
+    // **Map the auction**
+    if (raw.auction_id) {
+      const auction = raw.auction_id;
+      domainEntity.auction_id = {
+        id: auction.id,
+        start_time: auction.start_time,
+        end_time: auction.end_time,
+        status: auction.status,
+        current_winner: auction.current_winner,
+        highest_bid: auction.highest_bid,
+        current_bid: auction.current_bid,
       };
     }
 
@@ -86,6 +100,10 @@ export class PaymentMapper {
 
     if (domainEntity.user_id) {
       persistenceEntity.user_id = domainEntity.user_id as UserEntity;
+    }
+
+    if (domainEntity.auction_id) {
+      persistenceEntity.auction_id = domainEntity.auction_id as AuctionEntity;
     }
 
     if (domainEntity.bid_id) {

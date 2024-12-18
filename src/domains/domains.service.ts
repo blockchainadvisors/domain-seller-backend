@@ -69,7 +69,8 @@ export class DomainsService {
   ) {
     // Do not remove comment below.
     // <updating-property />
-
+    console.log('why');
+    console.log(updateDomainDto);
     return this.domainRepository.update(id, {
       // Do not remove comment below.
       // <updating-property-payload />
@@ -84,6 +85,7 @@ export class DomainsService {
       url: updateDomainDto.url,
       registration_date: updateDomainDto.registration_date,
       renewal_price: updateDomainDto.renewal_price,
+      current_owner: updateDomainDto.current_owner,
     });
   }
 

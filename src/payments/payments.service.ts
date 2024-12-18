@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   forwardRef,
+  HttpStatus,
   Inject,
   Injectable,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
@@ -47,6 +49,7 @@ export class PaymentsService {
       amount: createPaymentDto.amount,
       status: 'PENDING',
       bid_id: createPaymentDto.bid_id as BidEntity,
+      auction_id: createPaymentDto.auction_id,
     });
 
     // Call mailer service to send payment link
@@ -167,52 +170,61 @@ export class PaymentsService {
     const session = await this.stripe.checkout.sessions.retrieve(
       payment.stripe_id,
     );
+    const auction = await this.auctionService.findById(payment.auction_id.id);
+    if (!auction) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: { auction: 'notExists', message: 'Auction does not exists' },
+      });
+    }
 
     if (session.payment_status === 'paid') {
       const currentTime = new Date();
       await this.paymentRepository.update(paymentId, { status: 'PAID' });
       await this.auctionService.updateStatus(
-        payment.bid_id.auction_id.id,
+        payment.auction_id.id,
         'PAYMENT_COMPLETED',
       );
-      await this.domainService.update(payment.bid_id.id, {
+      console.log('auction.domain_id.id');
+      console.log(auction.domain_id.id);
+      console.log(payment.user_id.id);
+      console.log(currentTime);
+      console.log(auction.current_bid);
+      await this.domainService.update(auction.domain_id.id, {
         status: 'PAYMENT_COMPLETED',
         current_owner: payment.user_id.id,
         registration_date: currentTime,
-        renewal_price: payment.bid_id.amount,
+        renewal_price: auction.current_bid,
       });
     } else {
       await this.paymentRepository.update(paymentId, { status: 'FAILED' });
       const currentTime = new Date();
-      if (payment.bid_id.auction_id.end_time <= currentTime) {
+      if (payment.auction_id.end_time <= currentTime) {
         await this.auctionService.updateStatus(
-          payment.bid_id.auction_id.id,
+          payment.auction_id.id,
           'PAYMENT_FAILED',
         );
-        await this.domainService.updateStatus(
-          payment.bid_id.id,
-          'PAYMENT_FAILED',
-        );
+        await this.domainService.updateStatus(auction.domain_id.id, 'LISTED');
       } else {
         const bidsCount = await this.bidsService.findCountByAuctionId(
-          payment.bid_id.auction_id.id,
+          payment.auction_id.id,
         );
         if (bidsCount > 0) {
           await this.auctionService.updateStatus(
-            payment.bid_id.auction_id.id,
+            payment.auction_id.id,
             'ACTIVE',
           );
           await this.domainService.updateStatus(
-            payment.bid_id.id,
+            auction.domain_id.id,
             'BID_RECIEVED',
           );
         } else {
           await this.auctionService.updateStatus(
-            payment.bid_id.auction_id.id,
+            payment.auction_id.id,
             'ACTIVE',
           );
           await this.domainService.updateStatus(
-            payment.bid_id.id,
+            auction.domain_id.id,
             'AUCTION_ACTIVE',
           );
         }

@@ -30,6 +30,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RoleEnum } from '../roles/roles.enum';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
+import { Request } from '@nestjs/common';
 
 @ApiTags('Auctions')
 @Controller({
@@ -149,5 +150,24 @@ export class AuctionsController {
   })
   async findAuctionActiveDomainsById(@Param('id') id: string): Promise<any> {
     return this.auctionsService.findAvailableDomainDetailsByAuctionId(id);
+  }
+
+  @Get('/validate/auction/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Auction,
+  })
+  validateUserCanMakeRequestOnAuction(@Param('id') id: string, @Request() req) {
+    const user_id: string = req.user?.id;
+    return this.auctionsService.validateUserCanMakeRequestOnAuction(
+      id,
+      user_id,
+    );
   }
 }

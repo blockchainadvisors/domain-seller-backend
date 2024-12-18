@@ -8,9 +8,11 @@ import { AuctionsModule } from '../auctions/auctions.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { MailModule } from '../mail/mail.module';
 import { SettingsModule } from '../settings/settings.module';
+import { BidLogsModule } from '../bid-logs/bid-logs.module';
 
 @Module({
   imports: [
+    BidLogsModule,
     UsersModule,
 
     DomainsModule,

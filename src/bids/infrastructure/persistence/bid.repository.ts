@@ -43,4 +43,9 @@ export abstract class BidRepository {
   ): Promise<NullableType<Bid>>;
 
   abstract findCountByAuctionId(auctionId: string): Promise<number>;
+
+  abstract countBidByUserIdAuctionId(
+    auctionId: string,
+    user_id: string,
+  ): Promise<number>;
 }

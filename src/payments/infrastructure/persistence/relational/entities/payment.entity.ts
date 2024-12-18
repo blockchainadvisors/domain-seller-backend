@@ -10,6 +10,7 @@ import {
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { BidEntity } from '../../../../../bids/infrastructure/persistence/relational/entities/bid.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { AuctionEntity } from '../../../../../auctions/infrastructure/persistence/relational/entities/auction.entity';
 
 @Entity({
   name: 'payment',
@@ -46,6 +47,12 @@ export class PaymentEntity extends EntityRelationalHelper {
   })
   @JoinColumn({ name: 'user_id' })
   user_id: UserEntity;
+
+  @ManyToOne(() => AuctionEntity, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'auction_id' })
+  auction_id: AuctionEntity;
 
   @ManyToOne(() => BidEntity, {
     eager: true,

@@ -41,6 +41,18 @@ export class DomainMapper {
 
     persistenceEntity.url = domainEntity.url;
 
+    if (domainEntity.current_owner) {
+      persistenceEntity.current_owner = domainEntity.current_owner;
+    }
+
+    if (domainEntity.registration_date) {
+      persistenceEntity.registration_date = domainEntity.registration_date;
+    }
+
+    if (domainEntity.renewal_price) {
+      persistenceEntity.renewal_price = domainEntity.renewal_price;
+    }
+
     if (domainEntity.category) {
       persistenceEntity.category = domainEntity.category;
     }
