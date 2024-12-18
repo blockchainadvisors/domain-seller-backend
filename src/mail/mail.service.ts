@@ -272,6 +272,7 @@ export class MailService {
       domainName: string;
       amount: number;
       firstName: string;
+      paymentUrl: string;
     }>,
   ): Promise<void> {
     const [
@@ -298,11 +299,6 @@ export class MailService {
       this.i18nService.translate('payment-link.text9'),
     ]);
 
-    // Construct the payment link URL
-    const paymentLink = new URL(
-      this.configService.getOrThrow('app.frontendDomain', { infer: true }),
-    );
-
     // Log for debugging
     console.log({ paymentLinkTitle, text1, text2 });
 
@@ -310,7 +306,7 @@ export class MailService {
     await this.mailerService.sendMail({
       to: mailData.to,
       subject: paymentLinkTitle || 'Domain Seller Payment Link',
-      text: `${paymentLinkTitle}: ${paymentLink.toString()}`,
+      text: `${paymentLinkTitle}}`,
       templatePath: path.join(
         this.configService.getOrThrow('app.workingDirectory', { infer: true }),
         'src',
@@ -333,7 +329,7 @@ export class MailService {
         user_name: mailData.data.firstName,
         domain_name: mailData.data.domainName,
         amount: mailData.data.amount,
-        payment_link: paymentLink,
+        payment_link: mailData.data.paymentUrl,
       },
     });
   }

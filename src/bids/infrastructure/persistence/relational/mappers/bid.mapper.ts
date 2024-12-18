@@ -48,6 +48,7 @@ export class BidMapper {
         current_winner: auction.current_winner,
         highest_bid: auction.highest_bid,
         current_bid: auction.current_bid,
+        reserve_price: auction.reserve_price,
       };
     }
 

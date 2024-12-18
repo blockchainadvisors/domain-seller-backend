@@ -121,8 +121,7 @@ export class DomainsController {
 
   @Get('/users/my-domains')
   @ApiBearerAuth()
-  @Roles(RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     type: InfinityPaginationResponse(Domain),
   })

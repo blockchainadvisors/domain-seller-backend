@@ -51,6 +51,7 @@ export class Payment {
     | 'current_winner'
     | 'highest_bid'
     | 'current_bid'
+    | 'domain_id'
   >;
 
   @ApiProperty({

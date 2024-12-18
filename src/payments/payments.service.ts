@@ -44,12 +44,42 @@ export class PaymentsService {
   }
 
   async create(createPaymentDto: CreatePaymentDto) {
+    const url = new URL(
+      this.configService.getOrThrow('app.frontendDomain', {
+        infer: true,
+      }),
+    );
+
+    const stripeSession = await this.stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'GBP',
+            product_data: {
+              name: `Payment for ${createPaymentDto.auction_id.domain_id.url}`,
+            },
+            unit_amount: Number(createPaymentDto.amount) * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${url}/payment/success-page`,
+      cancel_url: `${url}/payment/failed-page`,
+    });
+    if (!stripeSession.url!) {
+      throw new Error('Error from stripe, no payment link');
+    }
+
     const payment = await this.paymentRepository.create({
       user_id: createPaymentDto.user_id as UserEntity,
       amount: createPaymentDto.amount,
-      status: 'PENDING',
+      status: 'PROCESSING',
       bid_id: createPaymentDto.bid_id as BidEntity,
       auction_id: createPaymentDto.auction_id,
+      payment_url: stripeSession.url,
+      stripe_id: stripeSession.id,
     });
 
     // Call mailer service to send payment link
@@ -59,6 +89,7 @@ export class PaymentsService {
         domainName: createPaymentDto.bid_id.domain_id.url,
         amount: createPaymentDto.amount,
         firstName: createPaymentDto.user_id.first_name ?? '',
+        paymentUrl: stripeSession.url,
       },
     });
 
@@ -106,8 +137,17 @@ export class PaymentsService {
 
   async findAllByUserIdWithPagination(
     user_id: string,
+    retrieved_user_id: string,
     options: { page: number; limit: number; status?: string },
   ): Promise<Payment[]> {
+    //validate user details
+    if (user_id != retrieved_user_id) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: { user_id: 'userIdMismatch', message: 'User Id Mismatch' },
+      });
+    }
+
     return this.paymentRepository.findAllByUserIdWithPagination(
       user_id,
       options,
@@ -142,8 +182,8 @@ export class PaymentsService {
         },
       ],
       mode: 'payment',
-      success_url: `${url}/payment/success`,
-      cancel_url: `${url}/payment/cancel`,
+      success_url: `${url}/payment/success-page`,
+      cancel_url: `${url}/payment/failed-page`,
     });
 
     // Update payment status to PAYMENT_PROCESSING

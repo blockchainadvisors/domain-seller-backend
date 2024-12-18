@@ -27,6 +27,7 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
+import { Request } from '@nestjs/common';
 
 @Controller({
   path: 'payments',
@@ -132,19 +133,25 @@ export class PaymentsController {
   })
   async findAllByUserId(
     @Param('userId') userId: string,
+    @Request() req,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
-    @Query('status') status?: string, // Optional status filter
+    @Query('status') status?: string,
   ): Promise<InfinityPaginationResponseDto<Payment>> {
+    const retrieved_user_id: string = req.user?.id;
     const pageNumber = Math.max(Number(page) || 1, 1);
     const limitNumber = Math.min(Math.max(Number(limit) || 10, 1), 50);
 
     return infinityPagination(
-      await this.paymentsService.findAllByUserIdWithPagination(userId, {
-        page: pageNumber,
-        limit: limitNumber,
-        status,
-      }),
+      await this.paymentsService.findAllByUserIdWithPagination(
+        userId,
+        retrieved_user_id,
+        {
+          page: pageNumber,
+          limit: limitNumber,
+          status,
+        },
+      ),
       { page: pageNumber, limit: limitNumber },
     );
   }

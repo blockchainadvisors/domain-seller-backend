@@ -670,18 +670,139 @@ export class BidsService {
     );
   }
 
+  // private filterBidsResponse(bids: Bid[]) {
+  //   return bids.map((bid) => {
+  //     const { auction_id, user_id, domain_id, ...otherBidFields } = bid;
+  //     const { status, ...otherAuctionFields } = auction_id; // Exclude only `status`
+  //     const { current_winner, current_bid } = auction_id;
+  //     const { amount } = bid;
+
+  //     let auction_status: string;
+  //     const bid_status =
+  //       Number(amount) > Number(current_bid) && user_id.id === current_winner
+  //         ? 'WINNING'
+  //         : 'OUT BID';
+
+  //     if(Number(amount) >= Number(current_bid) && user_id.id === current_winner){
+
+  //     }
+  //     switch (status) {
+  //       case 'ACTIVE':
+  //         auction_status = 'ACTIVE';
+  //         break;
+  //       case 'FAILED':
+  //         auction_status = 'CANCELLED';
+  //         break;
+  //       case 'ENDED':
+  //       case 'LEASE_PENDING':
+  //         auction_status = 'ENDED';
+  //         break;
+  //       case 'PAYMENT_PROCESSING':
+  //       case 'PAYMENT_PENDING':
+  //       case 'PAYMENT_COMPLETED':
+  //       case 'PAYMENT_FAILED':
+  //         auction_status = current_winner === user_id.id ? status : 'ENDED';
+  //         break;
+  //       default:
+  //         auction_status = 'UNKNOWN';
+  //     }
+
+  //     return {
+  //       ...otherBidFields,
+  //       auction_id: {
+  //         ...otherAuctionFields,
+  //       },
+  //       auction_status,
+  //       bid_status,
+  //       url: domain_id.url,
+  //       domain_id: domain_id.id,
+  //     };
+  //   });
+  // }
+
+  // private filterBidsResponse(bids: Bid[]) {
+  //   return bids.map((bid) => {
+  //     const { auction_id, user_id, domain_id, ...otherBidFields } = bid;
+  //     const { status, reserve_price,   ...otherAuctionFields } = auction_id;
+  //     const { amount } = bid;
+  //     const { current_winner, current_bid } = auction_id;
+
+  //     // Determine bid status
+  //     let bid_status = 'OUT BID'; // Default
+  //     if (Number(amount) > Number(current_bid) && user_id.id === current_winner) {
+  //       if (Number(amount) >= Number(reserve_price)) {
+  //         bid_status = 'WINNING';
+  //       } else {
+  //         bid_status = 'WINNIG(RESERVE NOT MET)';
+  //       }
+  //     }
+
+  //     // Determine auction status
+  //     let auction_status: string;
+  //     switch (status) {
+  //       case 'ACTIVE':
+  //         auction_status = 'ACTIVE';
+  //         break;
+  //       case 'FAILED':
+  //         auction_status = 'CANCELLED';
+  //         break;
+  //       case 'ENDED':
+  //       case 'LEASE_PENDING':
+  //         auction_status = 'ENDED';
+  //         break;
+  //       case 'PAYMENT_PROCESSING':
+  //       case 'PAYMENT_PENDING':
+  //       case 'PAYMENT_COMPLETED':
+  //       case 'PAYMENT_FAILED':
+  //         auction_status = current_winner === user_id.id ? status : 'ENDED';
+  //         break;
+  //       default:
+  //         auction_status = 'UNKNOWN';
+  //     }
+
+  //     return {
+  //       ...otherBidFields,
+  //       auction_id: {
+  //         ...otherAuctionFields,
+  //       },
+  //       auction_status,
+  //       bid_status,
+  //       url: domain_id.url,
+  //       domain_id: domain_id.id,
+  //     };
+  //   });
+  // }
   private filterBidsResponse(bids: Bid[]) {
     return bids.map((bid) => {
       const { auction_id, user_id, domain_id, ...otherBidFields } = bid;
-      const { status, ...otherAuctionFields } = auction_id; // Exclude only `status`
+      const { status, reserve_price, ...otherAuctionFields } = auction_id;
       const { current_winner, current_bid } = auction_id;
       const { amount } = bid;
 
+      // Determine bid status
+      let bid_status = 'OUT BID'; // Default
+
+      if (status === 'FAILED') {
+        if (Number(amount) < Number(reserve_price)) {
+          bid_status = 'RESERVE NOT MET';
+        } else {
+          bid_status = 'CANCELLED';
+        }
+      } else if (status === 'CANCELLED') {
+        bid_status = 'BIDDING CANCELLED'; // Custom response for cancelled auctions
+      } else if (
+        Number(amount) > Number(current_bid) &&
+        user_id.id === current_winner
+      ) {
+        if (Number(amount) >= Number(reserve_price)) {
+          bid_status = 'WINNING';
+        } else {
+          bid_status = 'WINNING(RESERVE NOT MET)';
+        }
+      }
+
+      // Determine auction status
       let auction_status: string;
-      const bid_status =
-        Number(amount) > Number(current_bid) && user_id.id === current_winner
-          ? 'WINNING'
-          : 'OUT_BIDDED';
       switch (status) {
         case 'ACTIVE':
           auction_status = 'ACTIVE';
@@ -836,8 +957,8 @@ export class BidsService {
           },
         ],
         mode: 'payment',
-        success_url: `${url}/payment/success`,
-        cancel_url: `${url}/payment/cancel`,
+        success_url: `${url}/payment/success-page`,
+        cancel_url: `${url}/payment/failed-page`,
       });
 
       console.log(session);

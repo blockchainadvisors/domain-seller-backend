@@ -58,6 +58,7 @@ export class DnsSettingsMapper {
           current_winner: bid.auction_id.current_winner,
           highest_bid: bid.auction_id.highest_bid,
           current_bid: bid.auction_id.current_bid,
+          reserve_price: bid.auction_id.reserve_price,
         },
         user_id: {
           id: bid.user_id.id,

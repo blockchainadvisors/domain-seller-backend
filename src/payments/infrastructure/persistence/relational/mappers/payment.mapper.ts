@@ -43,6 +43,14 @@ export class PaymentMapper {
         current_winner: auction.current_winner,
         highest_bid: auction.highest_bid,
         current_bid: auction.current_bid,
+        domain_id: {
+          id: auction.domain_id.id,
+          status: auction.domain_id.status,
+          current_highest_bid: auction.domain_id.current_highest_bid,
+          url: auction.domain_id.url,
+          created_at: auction.domain_id.created_at,
+          updated_at: auction.domain_id.updated_at,
+        },
       };
     }
 
@@ -67,6 +75,7 @@ export class PaymentMapper {
           current_winner: bid.auction_id.current_winner,
           highest_bid: bid.auction_id.highest_bid,
           current_bid: bid.auction_id.current_bid,
+          reserve_price: bid.auction_id.reserve_price,
         },
         user_id: {
           id: bid.user_id.id,

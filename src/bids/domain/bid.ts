@@ -44,6 +44,7 @@ export class Bid {
     | 'current_winner'
     | 'highest_bid'
     | 'current_bid'
+    | 'reserve_price'
   >;
 
   @ApiProperty()
