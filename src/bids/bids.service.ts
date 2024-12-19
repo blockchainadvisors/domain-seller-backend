@@ -34,6 +34,7 @@ import { SettingsService } from '../settings/settings.service';
 import { BidLogsService } from '../bid-logs/bid-logs.service';
 import { BidLogsEntity } from '../bid-logs/infrastructure/persistence/relational/entities/bid-logs.entity';
 import { IncreaseBidDto } from './dto/Increase-bid.dto';
+import { Auction } from '../auctions/domain/auction';
 
 @Injectable()
 export class BidsService {
@@ -146,11 +147,8 @@ export class BidsService {
         });
       }
 
-      // **Bid amount validation**//
       const minIncrement = Number(auction_id.min_increment) || 0;
       const currentHighestBid = Number(auction_id.current_bid) || 0;
-
-      // **Create bid**: Now that user_id, domain_id, and auction_id are resolved, create the bid entity
 
       const bid_count = await this.bidRepository.findCountByAuctionId(
         auction_id.id,
@@ -392,83 +390,103 @@ export class BidsService {
     try {
       const manager = queryRunner.manager;
 
-      // **Validate and fetch related entities**
-      const user = await this.userService.findById(user_id);
-      if (!user) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { user_id: 'usernotExists', message: 'User does not exist' },
-        });
-      }
+      // // **Validate and fetch related entities**
+      // const user = await this.userService.findById(user_id);
+      // if (!user) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: { user_id: 'usernotExists', message: 'User does not exist' },
+      //   });
+      // }
 
-      const auction = await this.auctionService.findById(
-        increaseBidDto.auction_id,
-      );
-      if (!auction) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { auction: 'notExists', message: 'Auction not valid' },
-        });
-      }
-      // **Auction time validation**
-      const currentTime = new Date();
-      if (auction.start_time && currentTime < auction.start_time) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { auction: 'notStarted', message: 'Auction not started' },
-        });
-      }
+      // const auction = await this.auctionService.findById(
+      //   increaseBidDto.auction_id,
+      // );
+      // if (!auction) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: { auction: 'notExists', message: 'Auction not valid' },
+      //   });
+      // }
+      // // **Auction time validation**
+      // const currentTime = new Date();
+      // if (auction.start_time && currentTime < auction.start_time) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: { auction: 'notStarted', message: 'Auction not started' },
+      //   });
+      // }
 
-      if (
-        (auction.end_time && currentTime > auction.end_time) ||
-        auction.status === 'LEASE_PENDING'
-      ) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { auction: 'hasEnded', message: 'Domain have been leased' },
-        });
-      }
+      // if (
+      //   (auction.end_time && currentTime > auction.end_time) ||
+      //   auction.status === 'LEASE_PENDING'
+      // ) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: { auction: 'hasEnded', message: 'Domain have been leased' },
+      //   });
+      // }
 
-      const minIncrement = Number(auction.min_increment) || 0;
-      const currentHighestBid = Number(auction.current_bid) || 0;
+      // const bid_count = await this.bidRepository.countBidByUserIdAuctionId(
+      //   auction.id,
+      //   user_id,
+      // );
 
-      const bid_count = await this.bidRepository.countBidByUserIdAuctionId(
-        auction.id,
+      // if (Number(bid_count) === 0) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: {
+      //       auction_id: 'canNotIncreaseNoPreviousBid',
+      //       message: 'Bid cannot be increased, no previous bid',
+      //     },
+      //   });
+      // }
+
+      // if (
+      //   user_id === auction.current_winner &&
+      //   Number(increaseBidDto.amount) <= Number(auction.highest_bid)
+      // ) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: {
+      //       auction_id: 'amountLessThanPreviousBid',
+      //       message: 'Bid amount must be greater than your previous bid',
+      //     },
+      //   });
+      // }
+
+      // const minIncrement = Number(auction.min_increment) || 0;
+      // const currentHighestBid = Number(auction.current_bid) || 0;
+
+      // if (Number(increaseBidDto.amount) < currentHighestBid + minIncrement) {
+      //   throw new UnprocessableEntityException({
+      //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+      //     errors: {
+      //       auction_id: 'amountLessCurrentBidPlusMinIncrement',
+      //       message: `Bid amount must be greater than current bid plus minimum increament ${minIncrement}`,
+      //     },
+      //   });
+      // }
+
+      // Validate user and auction
+      const user = await this.validateUser(user_id);
+      const auction = await this.validateAuction(increaseBidDto.auction_id);
+
+      // Validate auction state
+      this.validateAuctionState(auction);
+
+      // Validate user's existing bid
+      await this.validateUserBid(auction.id, user_id);
+
+      // Additional validation for bid amount
+      this.validateBidAmount(
+        increaseBidDto.amount,
+        auction.current_bid,
+        auction.min_increment,
+        auction.highest_bid,
+        auction.current_winner || '',
         user_id,
       );
-
-      if (Number(bid_count) === 0) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            auction_id: 'canNotIncreaseNoPreviousBid',
-            message: 'Bid cannot be increased, no previous bid',
-          },
-        });
-      }
-
-      if (
-        user_id === auction.current_winner &&
-        Number(increaseBidDto.amount) <= Number(auction.highest_bid)
-      ) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            auction_id: 'amountLessThanPreviousBid',
-            message: 'Bid amount must be greater than your previous bid',
-          },
-        });
-      }
-
-      if (Number(increaseBidDto.amount) < currentHighestBid + minIncrement) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            auction_id: 'amountLessCurrentBidPlusMinIncrement',
-            message: `Bid amount must be greater than current bid plus minimum increament ${minIncrement}`,
-          },
-        });
-      }
 
       if (Number(increaseBidDto.amount) > Number(auction.highest_bid)) {
         const highestBid = Number(auction.highest_bid);
@@ -479,70 +497,147 @@ export class BidsService {
 
         const maxBidAllowed = highestBid + minIncrement; // Maximum possible bid
         let validCurrentBid: number;
+        if (user_id === auction.current_winner) {
+          // Check reserve price condition
+          if (
+            Number(increaseBidDto.amount) >= reservePrice &&
+            currentBid < reservePrice
+          ) {
+            // Update current bid to reserve price
+            validCurrentBid = reservePrice;
 
-        if (userBid >= reservePrice && currentBid < reservePrice) {
-          // Case: User's bid meets reserve price and current bid is below reserve
-          validCurrentBid = Math.max(
-            reservePrice,
-            Math.min(maxBidAllowed, userBid),
-          );
+            const newBid = manager.create(BidEntity, {
+              amount: increaseBidDto.amount,
+              user_id: user as UserEntity,
+              domain_id: auction.domain_id as DomainEntity,
+              auction_id: auction as AuctionEntity,
+              created_by_method: 'USER',
+              current_bid: validCurrentBid,
+            });
+            await manager.save(newBid);
+
+            // **Update action**
+            const auctionRepository =
+              queryRunner.manager.getRepository(AuctionEntity);
+            await auctionRepository.update(auction.id, {
+              highest_bid: increaseBidDto.amount,
+              winning_bid_id: newBid.id,
+              current_bid: validCurrentBid,
+            });
+            // update domain table
+            const domainRepository =
+              queryRunner.manager.getRepository(DomainEntity);
+            await domainRepository.update(auction.domain_id.id, {
+              current_highest_bid: validCurrentBid,
+            });
+
+            // Create logs for the former and updated highest bids
+            const formerBidLog = manager.create(BidLogsEntity, {
+              amount: highestBid,
+              bidder: auction.current_winner,
+              bid_id: newBid,
+            });
+
+            const updatedBidLog = manager.create(BidLogsEntity, {
+              amount: validCurrentBid,
+              bidder: auction.current_winner,
+              bid_id: newBid,
+            });
+
+            await manager.save(formerBidLog);
+            await manager.save(updatedBidLog);
+          } else {
+            // Directly update the highest bid
+            validCurrentBid = Number(auction.current_bid);
+
+            const newBid = manager.create(BidEntity, {
+              amount: increaseBidDto.amount,
+              user_id: user as UserEntity,
+              domain_id: auction.domain_id as DomainEntity,
+              auction_id: auction as AuctionEntity,
+              created_by_method: 'USER',
+              current_bid: validCurrentBid,
+            });
+            await manager.save(newBid);
+            // **Update action**
+            const auctionRepository =
+              queryRunner.manager.getRepository(AuctionEntity);
+            await auctionRepository.update(auction.id, {
+              highest_bid: increaseBidDto.amount,
+              winning_bid_id: newBid.id,
+            });
+          }
         } else {
-          // General case: No special reserve price condition
-          validCurrentBid = Math.min(maxBidAllowed, userBid);
-        }
-        // Save the new bid
-        const newBid = manager.create(BidEntity, {
-          amount: increaseBidDto.amount,
-          user_id: user as UserEntity,
-          domain_id: auction.domain_id as DomainEntity,
-          auction_id: auction as AuctionEntity,
-          created_by_method: 'USER',
-          current_bid: validCurrentBid,
-        });
-
-        await manager.save(newBid);
-
-        // **Update action**
-        const auctionRepository =
-          queryRunner.manager.getRepository(AuctionEntity);
-        await auctionRepository.update(auction.id, {
-          current_bid: validCurrentBid,
-          highest_bid: increaseBidDto.amount,
-          current_winner: user_id,
-          winning_bid_id: newBid.id,
-        });
-
-        // update domain table
-        const domainRepository =
-          queryRunner.manager.getRepository(DomainEntity);
-        await domainRepository.update(auction.domain_id.id, {
-          current_highest_bid: validCurrentBid,
-        });
-        const newBidLogs = manager.create(BidLogsEntity, {
-          amount: validCurrentBid,
-          bidder: user_id,
-          bid_id: newBid,
-        });
-
-        await manager.save(newBidLogs);
-
-        // send email to prvious winner
-        const previous_highest_user = await this.userService.findById(
-          auction.current_winner!,
-        );
-        if (!previous_highest_user) {
-          console.log('No previous winner');
-        } else {
-          void this.mailService.outBid({
-            to: previous_highest_user.email!,
-            data: {
-              domaiName: auction.domain_id.url,
-              userBidAmount: auction.highest_bid, // This is the previous highest bid amount
-              auctionEndTime: auction.end_time,
-              currentHighestBid: increaseBidDto.amount, // This is the new current bid amount
-              firstName: previous_highest_user.first_name ?? 'User',
-            },
+          if (userBid >= reservePrice && currentBid < reservePrice) {
+            // Case: User's bid meets reserve price and current bid is below reserve
+            validCurrentBid = Math.max(
+              reservePrice,
+              Math.min(maxBidAllowed, userBid),
+            );
+          } else {
+            // General case: No special reserve price condition
+            validCurrentBid = Math.min(maxBidAllowed, userBid);
+          }
+          // Save the new bid
+          const newBid = manager.create(BidEntity, {
+            amount: increaseBidDto.amount,
+            user_id: user as UserEntity,
+            domain_id: auction.domain_id as DomainEntity,
+            auction_id: auction as AuctionEntity,
+            created_by_method: 'USER',
+            current_bid: validCurrentBid,
           });
+
+          await manager.save(newBid);
+
+          // **Update action**
+          const auctionRepository =
+            queryRunner.manager.getRepository(AuctionEntity);
+          await auctionRepository.update(auction.id, {
+            current_bid: validCurrentBid,
+            highest_bid: increaseBidDto.amount,
+            current_winner: user_id,
+            winning_bid_id: newBid.id,
+          });
+
+          // update domain table
+          const domainRepository =
+            queryRunner.manager.getRepository(DomainEntity);
+          await domainRepository.update(auction.domain_id.id, {
+            current_highest_bid: validCurrentBid,
+          });
+
+          const newBidLogs = manager.create(BidLogsEntity, {
+            amount: Number(auction.highest_bid),
+            bidder: auction.current_winner,
+            bid_id: newBid,
+          });
+          const newBidLogs2 = manager.create(BidLogsEntity, {
+            amount: validCurrentBid,
+            bidder: user_id,
+            bid_id: newBid,
+          });
+
+          await manager.save(newBidLogs);
+          await manager.save(newBidLogs2);
+          // send email to prvious winner
+          const previous_highest_user = await this.userService.findById(
+            auction.current_winner!,
+          );
+          if (!previous_highest_user) {
+            console.log('No previous winner');
+          } else {
+            void this.mailService.outBid({
+              to: previous_highest_user.email!,
+              data: {
+                domaiName: auction.domain_id.url,
+                userBidAmount: auction.highest_bid, // This is the previous highest bid amount
+                auctionEndTime: auction.end_time,
+                currentHighestBid: increaseBidDto.amount, // This is the new current bid amount
+                firstName: previous_highest_user.first_name ?? 'User',
+              },
+            });
+          }
         }
       } else {
         const userBid = Number(increaseBidDto.amount);
@@ -607,8 +702,6 @@ export class BidsService {
 
       // **Commit the transaction**
       await queryRunner.commitTransaction();
-      // **Refetch to get updated data with limited fields**
-      // const createdBid = await this.bidRepository.findById(newBid.id);
 
       return { message: 'Successful' };
     } catch (error) {
@@ -618,6 +711,79 @@ export class BidsService {
     } finally {
       // **Release the query runner to avoid memory leaks**
       await queryRunner.release();
+    }
+  }
+
+  // Helper Methods
+  private async validateUser(user_id: string) {
+    const user = await this.userService.findById(user_id);
+    if (!user) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'User does not exist' },
+      });
+    }
+    return user;
+  }
+
+  private async validateAuction(auction_id: string) {
+    const auction = await this.auctionService.findById(auction_id);
+    if (!auction) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'Auction does not exist' },
+      });
+    }
+    return auction;
+  }
+
+  private validateAuctionState(auction: Auction) {
+    const currentTime = new Date();
+    if (auction.start_time && currentTime < auction.start_time) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'Auction has not started' },
+      });
+    }
+    if (
+      (auction.end_time && currentTime > auction.end_time) ||
+      auction.status === 'LEASE_PENDING'
+    ) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'Auction has ended' },
+      });
+    }
+  }
+
+  private async validateUserBid(auction_id: string, user_id: string) {
+    const bidCount = await this.bidRepository.countBidByUserIdAuctionId(
+      auction_id,
+      user_id,
+    );
+    if (Number(bidCount) === 0) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'No existing bid to increase' },
+      });
+    }
+  }
+
+  private validateBidAmount(
+    amount: number,
+    currentBid: number,
+    minIncrement: number,
+    highestBid: number,
+    currentWinner: string,
+    user_id: string,
+  ) {
+    const minAllowed = Number(currentBid) + Number(minIncrement);
+    if (amount < minAllowed) {
+      throw new UnprocessableEntityException({
+        errors: {
+          message: `Bid amount must be at least ${minAllowed}`,
+        },
+      });
+    }
+    if (user_id === currentWinner && Number(amount) <= Number(highestBid)) {
+      throw new UnprocessableEntityException({
+        errors: { message: 'Bid must exceed your previous highest bid' },
+      });
     }
   }
 
