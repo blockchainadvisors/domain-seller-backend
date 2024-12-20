@@ -93,7 +93,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
   }): Promise<{ data: any[]; total: number }> {
     const { page, limit } = paginationOptions;
     const skip = (page - 1) * limit;
-
+  
     // Query for paginated results
     const auctions = await this.auctionRepository
       .createQueryBuilder('auction')
@@ -110,25 +110,28 @@ export class AuctionRelationalRepository implements AuctionRepository {
         'auction.current_bid AS current_bid',
         'COALESCE(MAX(bid.amount), 0) AS current_highest_bid', // Get highest bid
         'COUNT(bid.id) AS total_bids', // Count total bids
+        'auction.start_time AS start_time',
         'auction.end_time AS end_time',
       ])
-      .where('auction.status = :status', { status: 'ACTIVE' })
+      .where('auction.start_time <= :currentTime', { currentTime: new Date() })
+      .andWhere('auction.end_time >= :currentTime', { currentTime: new Date() }) // Active auctions based on time
       .groupBy('auction.id, domain.id')
       .orderBy('auction.end_time', 'ASC') // Optional: Order by end_time or any other field
       .skip(skip)
       .take(limit)
       .getRawMany();
-
+  
     // Query for total count
     const total = await this.auctionRepository
       .createQueryBuilder('auction')
-      .where('auction.status = :status', { status: 'ACTIVE' })
+      .where('auction.start_time <= :currentTime', { currentTime: new Date() })
+      .andWhere('auction.end_time >= :currentTime', { currentTime: new Date() }) // Total count based on time
       .getCount();
-
+  
     return {
       data: auctions.map((auction) => ({
         id: auction.id,
-        current_highest_bid: auction.highest_bid,
+        current_highest_bid: auction.current_highest_bid,
         total_bids: parseInt(auction.total_bids, 10),
         lease_price: auction.lease_price,
         status: auction.status,
@@ -142,6 +145,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
       total,
     };
   }
+  
 
   async findAvailableDomainDetailsByAuctionId(
     auction_id: string,
@@ -184,7 +188,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
       url: auctionDetails.url,
       end_time: auctionDetails.end_time,
       domain_id: auctionDetails.domain_id,
-      current_bid: auctionDetails.current_bid,
+      current_bid: auctionDetails.current_bid
     };
   }
 }

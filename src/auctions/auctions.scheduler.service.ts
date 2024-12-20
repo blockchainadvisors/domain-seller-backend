@@ -16,7 +16,7 @@ export class AuctionSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(AuctionSchedulerService.name);
 
   // 10 minutes interval (you can adjust this based on your needs)
-  private readonly interval = 5 * 60 * 1000;
+  private readonly interval = 2 * 60 * 1000;
 
   constructor(
     private readonly auctionService: AuctionsService,

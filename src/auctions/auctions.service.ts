@@ -241,7 +241,7 @@ export class AuctionsService {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
-          id: 'notExists',
+          id: 'notExists', 
         },
       });
     }

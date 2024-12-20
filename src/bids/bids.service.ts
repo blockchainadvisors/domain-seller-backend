@@ -143,7 +143,7 @@ export class BidsService {
       ) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { auction: 'hasEnded', message: 'Auction have been leased' },
+          errors: { auction: 'hasEnded', message: 'Auction has ended or have been leased' },
         });
       }
 
