@@ -12,6 +12,10 @@ export class PaymentMapper {
 
     domainEntity.amount = raw.amount;
 
+    if (raw.payment_intent) {
+      domainEntity.payment_intent = raw.payment_intent;
+    }
+
     if (raw.stripe_id) {
       domainEntity.stripe_id = raw.stripe_id;
     }
@@ -101,6 +105,10 @@ export class PaymentMapper {
 
     if (domainEntity.stripe_id) {
       persistenceEntity.stripe_id = domainEntity.stripe_id;
+    }
+
+    if (domainEntity.payment_intent) {
+      persistenceEntity.payment_intent = domainEntity.payment_intent;
     }
 
     if (domainEntity.payment_url) {

@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
+  RawBodyRequest,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -27,14 +29,20 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
-import { Request } from '@nestjs/common';
+import { Request, Response } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AllConfigType } from '../config/config.type';
+import stripe from 'stripe';
 
 @Controller({
   path: 'payments',
   version: '1',
 })
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly configService: ConfigService<AllConfigType>,
+  ) {}
 
   @Post()
   @ApiTags('Payments')
@@ -172,16 +180,12 @@ export class PaymentsController {
     return this.paymentsService.initiatePayment(paymentId);
   }
 
-  @Post('complete-payment/:paymentId')
-  @ApiParam({
-    name: 'paymentId',
-    type: String,
-    required: true,
-  })
+  @Post('complete-payment')
   @ApiOkResponse({
     type: Payment,
   })
-  async completePayment(@Param('paymentId') paymentId: string) {
-    return this.paymentsService.completePayment(paymentId);
+  async completePayment(@Req() req: RawBodyRequest<Request>, @Response() res) {
+    const rawBody = req.rawBody!;
+    return this.paymentsService.completePayment(req, res, rawBody);
   }
 }

@@ -26,6 +26,8 @@ export abstract class PaymentRepository {
 
   abstract findByBidId(bidId: string): Promise<NullableType<Payment>>;
 
+  abstract findByStripeId(stripeId: string): Promise<NullableType<Payment>>;
+
   abstract findByIds(ids: Payment['id'][]): Promise<Payment[]>;
 
   abstract update(

@@ -93,7 +93,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
   }): Promise<{ data: any[]; total: number }> {
     const { page, limit } = paginationOptions;
     const skip = (page - 1) * limit;
-  
+
     // Query for paginated results
     const auctions = await this.auctionRepository
       .createQueryBuilder('auction')
@@ -120,14 +120,14 @@ export class AuctionRelationalRepository implements AuctionRepository {
       .skip(skip)
       .take(limit)
       .getRawMany();
-  
+
     // Query for total count
     const total = await this.auctionRepository
       .createQueryBuilder('auction')
       .where('auction.start_time <= :currentTime', { currentTime: new Date() })
       .andWhere('auction.end_time >= :currentTime', { currentTime: new Date() }) // Total count based on time
       .getCount();
-  
+
     return {
       data: auctions.map((auction) => ({
         id: auction.id,
@@ -145,7 +145,6 @@ export class AuctionRelationalRepository implements AuctionRepository {
       total,
     };
   }
-  
 
   async findAvailableDomainDetailsByAuctionId(
     auction_id: string,
@@ -188,7 +187,7 @@ export class AuctionRelationalRepository implements AuctionRepository {
       url: auctionDetails.url,
       end_time: auctionDetails.end_time,
       domain_id: auctionDetails.domain_id,
-      current_bid: auctionDetails.current_bid
+      current_bid: auctionDetails.current_bid,
     };
   }
 }

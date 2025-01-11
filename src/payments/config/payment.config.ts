@@ -7,6 +7,9 @@ import { PaymentConfig } from './payment-config.type';
 class EnvironmentVariablesValidator {
   @IsString()
   STRIPE_SECRET_KEY: string;
+
+  @IsString()
+  STRIPE_ENDPOINT_SECRET: string;
 }
 
 export default registerAs<PaymentConfig>('payment', () => {
@@ -15,5 +18,7 @@ export default registerAs<PaymentConfig>('payment', () => {
   return {
     stripeSecretKey:
       process.env.STRIPE_SECRET_KEY || 'ggfffffffffffffffffffffffffffffffffff',
+    stripeEndpointSecret:
+      process.env.STRIPE_ENDPOINT_SECRET || 'fffffffffffffffffffffffffffffffff',
   };
 });

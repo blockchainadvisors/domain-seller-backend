@@ -32,6 +32,12 @@ export class PaymentEntity extends EntityRelationalHelper {
     nullable: true,
     type: String,
   })
+  payment_intent?: string | null;
+
+  @Column({
+    nullable: true,
+    type: String,
+  })
   payment_url?: string | null;
 
   @Column({

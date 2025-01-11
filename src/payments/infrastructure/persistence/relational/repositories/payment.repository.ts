@@ -112,4 +112,12 @@ export class PaymentRelationalRepository implements PaymentRepository {
 
     return entities.map((entity) => PaymentMapper.toDomain(entity));
   }
+
+  async findByStripeId(stripeId: string): Promise<NullableType<Payment>> {
+    const entity = await this.paymentRepository.findOne({
+      where: { stripe_id: stripeId },
+    });
+
+    return entity ? PaymentMapper.toDomain(entity) : null;
+  }
 }

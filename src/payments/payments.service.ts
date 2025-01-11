@@ -201,77 +201,136 @@ export class PaymentsService {
     return { payment_url: session.url };
   }
 
-  async completePayment(paymentId: string) {
-    const payment = await this.paymentRepository.findById(paymentId);
-    if (!payment || !payment.stripe_id) {
-      throw new Error('Payment or Stripe session not found');
-    }
-    // Retrieve Stripe session
-    const session = await this.stripe.checkout.sessions.retrieve(
-      payment.stripe_id,
+  async completePayment(req: any, res: any, rawBody: Buffer) {
+    const sig = req.headers['stripe-signature'];
+    const endpointSecret = this.configService.getOrThrow(
+      'payment.stripeEndpointSecret',
+      {
+        infer: true,
+      },
     );
-    const auction = await this.auctionService.findById(payment.auction_id.id);
-    if (!auction) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { auction: 'notExists', message: 'Auction does not exists' },
-      });
+
+    let event: any;
+
+    try {
+      event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+      console.log('event', event);
+    } catch (err) {
+      console.error('Webhook signature verification failed.', err.message);
+      // Respond with 200 OK even on signature verification failure to avoid retries from Stripe
+      return res.status(200).send();
     }
 
-    if (session.payment_status === 'paid') {
-      const currentTime = new Date();
-      await this.paymentRepository.update(paymentId, { status: 'PAID' });
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const paymentObject = event.data.object;
+
+          if (paymentObject.payment_status === 'paid') {
+            await this.handlePaymentFailure(paymentObject);
+            //await this.handlePaymentSuccess(paymentObject);
+          } else {
+            await this.handlePaymentFailure(paymentObject);
+          }
+          break;
+        }
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+          break;
+      }
+    } catch (err) {
+      // Log any unexpected errors to debug
+      console.error('Error processing event:', err.message);
+    }
+
+    // Always respond with 200 OK
+    res.status(200).send();
+  }
+
+  async handlePaymentSuccess(paymentObject: any) {
+    console.log('handlePaymentSuccess');
+    const payment = await this.paymentRepository.findByStripeId(
+      paymentObject.id,
+    );
+    if (!payment) {
+      console.error(`Payment with Stripe ID ${paymentObject.id} not found.`);
+      return;
+    }
+
+    const auction = await this.auctionService.findById(payment.auction_id.id);
+    if (!auction) {
+      console.error(`Auction with ID ${payment.auction_id.id} not found.`);
+      return;
+    }
+
+    const currentTime = new Date();
+
+    // Update payment status and related entities
+    await this.paymentRepository.update(payment.id, {
+      status: 'PAID',
+      payment_intent: paymentObject.payment_intent,
+    });
+    await this.auctionService.updateStatus(
+      payment.auction_id.id,
+      'PAYMENT_COMPLETED',
+    );
+    await this.domainService.update(auction.domain_id.id, {
+      status: 'PAYMENT_COMPLETED',
+      current_owner: payment.user_id.id,
+      registration_date: currentTime,
+      renewal_price: auction.current_bid,
+    });
+
+    console.log(`Payment ${payment.id} completed successfully.`);
+    return;
+  }
+
+  async handlePaymentFailure(paymentObject: any) {
+    console.log('handlePaymentFailure');
+    const payment = await this.paymentRepository.findByStripeId(
+      paymentObject.id,
+    );
+    if (!payment) {
+      console.error(`Payment with Stripe ID ${paymentObject.id} not found.`);
+      return;
+    }
+
+    const auction = await this.auctionService.findById(payment.auction_id.id);
+    if (!auction) {
+      console.error(`Auction with ID ${payment.auction_id.id} not found.`);
+      return;
+    }
+
+    const currentTime = new Date();
+    await this.paymentRepository.update(payment.id, { status: 'FAILED' });
+
+    if (payment.auction_id.end_time <= currentTime) {
       await this.auctionService.updateStatus(
         payment.auction_id.id,
-        'PAYMENT_COMPLETED',
+        'PAYMENT_FAILED',
       );
-      console.log('auction.domain_id.id');
-      console.log(auction.domain_id.id);
-      console.log(payment.user_id.id);
-      console.log(currentTime);
-      console.log(auction.current_bid);
-      await this.domainService.update(auction.domain_id.id, {
-        status: 'PAYMENT_COMPLETED',
-        current_owner: payment.user_id.id,
-        registration_date: currentTime,
-        renewal_price: auction.current_bid,
-      });
+      await this.domainService.updateStatus(auction.domain_id.id, 'LISTED');
     } else {
-      await this.paymentRepository.update(paymentId, { status: 'FAILED' });
-      const currentTime = new Date();
-      if (payment.auction_id.end_time <= currentTime) {
-        await this.auctionService.updateStatus(
-          payment.auction_id.id,
-          'PAYMENT_FAILED',
+      const bidsCount = await this.bidsService.findCountByAuctionId(
+        payment.auction_id.id,
+      );
+      if (bidsCount > 0) {
+        await this.auctionService.updateStatus(payment.auction_id.id, 'ACTIVE');
+        await this.domainService.updateStatus(
+          auction.domain_id.id,
+          'BID_RECIEVED',
         );
-        await this.domainService.updateStatus(auction.domain_id.id, 'LISTED');
       } else {
-        const bidsCount = await this.bidsService.findCountByAuctionId(
-          payment.auction_id.id,
+        await this.auctionService.updateStatus(payment.auction_id.id, 'ACTIVE');
+        await this.domainService.updateStatus(
+          auction.domain_id.id,
+          'AUCTION_ACTIVE',
         );
-        if (bidsCount > 0) {
-          await this.auctionService.updateStatus(
-            payment.auction_id.id,
-            'ACTIVE',
-          );
-          await this.domainService.updateStatus(
-            auction.domain_id.id,
-            'BID_RECIEVED',
-          );
-        } else {
-          await this.auctionService.updateStatus(
-            payment.auction_id.id,
-            'ACTIVE',
-          );
-          await this.domainService.updateStatus(
-            auction.domain_id.id,
-            'AUCTION_ACTIVE',
-          );
-        }
       }
     }
 
-    return this.paymentRepository.findById(paymentId);
+    console.log(`Payment ${payment.id} failed.`);
+    return;
   }
 
   async findAllPendingPayments(): Promise<Payment[]> {

@@ -48,6 +48,10 @@ export class User {
   last_name: string | null;
 
   @ApiProperty({
+    type: String,
+    example: 'John',
+  })
+  @ApiProperty({
     type: () => Role,
   })
   role?: Role | null;
