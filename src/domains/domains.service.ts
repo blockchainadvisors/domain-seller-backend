@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { CreateDomainDto } from './dto/create-domain.dto';
 import { UpdateDomainDto } from './dto/update-domain.dto';
 import { DomainRepository } from './infrastructure/persistence/domain.repository';
@@ -25,6 +25,14 @@ export class DomainsService {
     // Do not remove comment below.
     // <creating-property />
     this.validateDomainName(createDomainDto.url);
+
+    const domainName = await this.domainRepository.findByName(createDomainDto.url);
+    if (domainName) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'domain name already exists',
+      });
+    }
 
     const status = 'LISTED';
 

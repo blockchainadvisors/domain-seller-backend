@@ -227,8 +227,7 @@ export class PaymentsService {
           const paymentObject = event.data.object;
 
           if (paymentObject.payment_status === 'paid') {
-            await this.handlePaymentFailure(paymentObject);
-            //await this.handlePaymentSuccess(paymentObject);
+            await this.handlePaymentSuccess(paymentObject);
           } else {
             await this.handlePaymentFailure(paymentObject);
           }

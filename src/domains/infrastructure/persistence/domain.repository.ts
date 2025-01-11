@@ -16,6 +16,8 @@ export abstract class DomainRepository {
 
   abstract findById(id: Domain['id']): Promise<NullableType<Domain>>;
 
+  abstract findByName(url: string): Promise<NullableType<Domain>>;
+
   abstract findByIds(ids: Domain['id'][]): Promise<Domain[]>;
 
   abstract update(
