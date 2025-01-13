@@ -46,7 +46,7 @@ export class DomainRelationalRepository implements DomainRepository {
 
   async findByName(url: string): Promise<NullableType<Domain>> {
     const entity = await this.domainRepository.findOne({
-      where: { url }
+      where: { url },
     });
 
     return entity ? DomainMapper.toDomain(entity) : null;

@@ -214,7 +214,6 @@ export class PaymentsService {
 
     try {
       event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-      console.log('event', event);
     } catch (err) {
       console.error('Webhook signature verification failed.', err.message);
       // Respond with 200 OK even on signature verification failure to avoid retries from Stripe

@@ -20,6 +20,10 @@ export class DomainMapper {
       domainEntity.category = raw.category;
     }
 
+    if (raw.current_owner) {
+      domainEntity.current_owner = raw.current_owner;
+    }
+
     domainEntity.description = raw.description;
 
     domainEntity.url = raw.url;

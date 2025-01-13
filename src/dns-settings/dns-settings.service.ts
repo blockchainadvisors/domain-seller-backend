@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   UnprocessableEntityException,
@@ -15,6 +16,8 @@ import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
 import { PaymentsService } from '../payments/payments.service';
+import { UpdateDnsRecordsDto } from './dto/update-dns-records.dto';
+import { CreateDnsRecordsDto } from './dto/create-dns-records.dto';
 
 @Injectable()
 export class DnsSettingsService {
@@ -214,5 +217,209 @@ export class DnsSettingsService {
 
   remove(id: DnsSettings['id']) {
     return this.dnsSettingsRepository.remove(id);
+  }
+
+  async findRecords(domain_id: string, user_id: string) {
+    // Fetch domain and validate existence and ownership
+    const domain = await this.domainService.findById(domain_id);
+    if (!domain) {
+      throw new BadRequestException({
+        errors: { message: 'Domain does not exist' },
+      });
+    }
+
+    if (domain.current_owner !== user_id) {
+      throw new BadRequestException({
+        errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    try {
+      // Prepare API URL and headers
+      const headers = {
+        Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
+        'Content-Type': 'application/json',
+      };
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domain.url}/records`;
+
+      // Make the request
+      const response = await axios.get(apiUrl, { headers });
+
+      // Return DNS records
+      return response.data;
+    } catch (error) {
+      // Handle and log errors
+      if (axios.isAxiosError(error)) {
+        console.error('Error response for DNS records:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+        throw new BadRequestException({
+          errors: {
+            message: `Error fetching DNS records: ${error.response?.data?.message || 'Unknown error'}`,
+          },
+        });
+      } else {
+        console.error('Unexpected error:', error.message);
+        throw new Error(`Failed to fetch DNS record for domain ${domain.url}.`);
+      }
+    }
+  }
+
+  async findDomainDetails(domain_id: string, user_id: string) {
+    // Fetch domain and validate existence and ownership
+    const domain = await this.domainService.findById(domain_id);
+    if (!domain) {
+      throw new BadRequestException({
+        errors: { message: 'Domain does not exist' },
+      });
+    }
+
+    if (domain.current_owner !== user_id) {
+      throw new BadRequestException({
+        errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    try {
+      // Prepare API URL and headers
+      const headers = {
+        Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
+        'Content-Type': 'application/json',
+      };
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domain.url}`;
+
+      // Make the request
+      const response = await axios.get(apiUrl, { headers });
+
+      // Return DNS records
+      return response.data;
+    } catch (error) {
+      // Handle and log errors
+      if (axios.isAxiosError(error)) {
+        console.error('Error response for domain details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+        throw new BadRequestException({
+          errors: {
+            message: `Error fetching Domain details: ${error.response?.data?.message || 'Unknown error'}`,
+          },
+        });
+      } else {
+        console.error('Unexpected error:', error.message);
+        throw new Error(`Failed to fetch details for domain ${domain.url}.`);
+      }
+    }
+  }
+
+  async updateRecord(
+    domain_id: string,
+    user_id: string,
+    recordType: string,
+    recordName: string,
+    updateDnsRecordsDto: UpdateDnsRecordsDto,
+  ) {
+    const domain = await this.domainService.findById(domain_id);
+    if (!domain) {
+      throw new BadRequestException({
+        errors: { message: 'Domain does not exist' },
+      });
+    }
+
+    if (domain.current_owner !== user_id) {
+      throw new BadRequestException({
+        errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    try {
+      // Prepare API URL and headers
+      const headers = {
+        Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
+        'Content-Type': 'application/json',
+      };
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domain.url}/records/${recordType}/${recordName}`;
+
+      // Make the request
+      const response = await axios.put(apiUrl, [updateDnsRecordsDto], {
+        headers,
+      });
+
+      // Return DNS records
+      return response.data;
+    } catch (error) {
+      // Handle and log errors
+      if (axios.isAxiosError(error)) {
+        console.error('Error response for domain details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+        throw new BadRequestException({
+          errors: {
+            message: `Error fetching Domain details: ${error.response?.data?.message || 'Unknown error'}`,
+          },
+        });
+      } else {
+        console.error('Unexpected error:', error.message);
+        throw new Error(`Failed to fetch details for domain ${domain.url}.`);
+      }
+    }
+  }
+
+  async addNewDnsRecord(
+    domain_id: string,
+    user_id: string,
+    createDnsRecordsDto: CreateDnsRecordsDto,
+  ) {
+    const domain = await this.domainService.findById(domain_id);
+    if (!domain) {
+      throw new BadRequestException({
+        errors: { message: 'Domain does not exist' },
+      });
+    }
+
+    if (domain.current_owner !== user_id) {
+      throw new BadRequestException({
+        errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    try {
+      // Prepare API URL and headers
+      const headers = {
+        Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
+        'Content-Type': 'application/json',
+      };
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domain.url}/records`;
+
+      // Make the request
+      const response = await axios.patch(apiUrl, [createDnsRecordsDto], {
+        headers,
+      });
+
+      // Return DNS records
+      return response.data;
+    } catch (error) {
+      // Handle and log errors
+      if (axios.isAxiosError(error)) {
+        console.error('Error response for domain details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+        throw new BadRequestException({
+          errors: {
+            message: `Error creating dns record: ${error.response?.data?.message || 'Unknown error'}`,
+          },
+        });
+      } else {
+        console.error('Unexpected error:', error.message);
+        throw new Error(`Failed to fetch details for domain ${domain.url}.`);
+      }
+    }
   }
 }
