@@ -45,4 +45,12 @@ export class UpdateDomainDto extends PartialType(CreateDomainDto) {
   @IsOptional()
   @IsString()
   registration_date?: Date;
+
+  @ApiProperty({
+    required: false,
+    type: () => Date,
+  })
+  @IsOptional()
+  @IsString()
+  expiry_date?: Date;
 }

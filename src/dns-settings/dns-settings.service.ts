@@ -18,6 +18,7 @@ import { AllConfigType } from '../config/config.type';
 import { PaymentsService } from '../payments/payments.service';
 import { UpdateDnsRecordsDto } from './dto/update-dns-records.dto';
 import { CreateDnsRecordsDto } from './dto/create-dns-records.dto';
+import { UpdateContactsDto } from './dto/update-contacts.dto';
 
 @Injectable()
 export class DnsSettingsService {
@@ -233,6 +234,20 @@ export class DnsSettingsService {
         errors: { message: 'User mismatch. User not the owner of the domain.' },
       });
     }
+    const currentTime = Date.now();
+
+    if (!domain.expiry_date) {
+      throw new BadRequestException({
+        errors: { message: 'Domain expiry date is not set.' },
+      });
+    }
+    
+    if (new Date(domain.expiry_date).getTime() <= currentTime) {
+      throw new BadRequestException({
+        errors: { message: 'Domain has expired.' },
+      });
+    }
+    
 
     try {
       // Prepare API URL and headers
@@ -279,6 +294,20 @@ export class DnsSettingsService {
     if (domain.current_owner !== user_id) {
       throw new BadRequestException({
         errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    const currentTime = Date.now();
+
+    if (!domain.expiry_date) {
+      throw new BadRequestException({
+        errors: { message: 'Domain expiry date is not set.' },
+      });
+    }
+
+    if (new Date(domain.expiry_date).getTime() <= currentTime) {
+      throw new BadRequestException({
+        errors: { message: 'Domain has expired.' },
       });
     }
 
@@ -335,6 +364,21 @@ export class DnsSettingsService {
       });
     }
 
+    const currentTime = Date.now();
+
+    if (!domain.expiry_date) {
+      throw new BadRequestException({
+        errors: { message: 'Domain expiry date is not set.' },
+      });
+    }
+
+    if (new Date(domain.expiry_date).getTime() <= currentTime) {
+      throw new BadRequestException({
+        errors: { message: 'Domain has expired.' },
+      });
+    }
+
+
     try {
       // Prepare API URL and headers
       const headers = {
@@ -388,6 +432,21 @@ export class DnsSettingsService {
       });
     }
 
+    const currentTime = Date.now();
+
+    if (!domain.expiry_date) {
+      throw new BadRequestException({
+        errors: { message: 'Domain expiry date is not set.' },
+      });
+    }
+
+    if (new Date(domain.expiry_date).getTime() <= currentTime) {
+      throw new BadRequestException({
+        errors: { message: 'Domain has expired.' },
+      });
+    }
+
+
     try {
       // Prepare API URL and headers
       const headers = {
@@ -419,6 +478,74 @@ export class DnsSettingsService {
       } else {
         console.error('Unexpected error:', error.message);
         throw new Error(`Failed to fetch details for domain ${domain.url}.`);
+      }
+    }
+  }
+
+  async updateContactDetails(
+    domain_id: string,
+    user_id: string,
+    updateContactsDto: UpdateContactsDto,
+  ) {
+    const domain = await this.domainService.findById(domain_id);
+    if (!domain) {
+      throw new BadRequestException({
+        errors: { message: 'Domain does not exist' },
+      });
+    }
+
+    if (domain.current_owner !== user_id) {
+      throw new BadRequestException({
+        errors: { message: 'User mismatch. User not the owner of the domain.' },
+      });
+    }
+
+    const currentTime = Date.now();
+
+    if (!domain.expiry_date) {
+      throw new BadRequestException({
+        errors: { message: 'Domain expiry date is not set.' },
+      });
+    }
+
+    if (new Date(domain.expiry_date).getTime() <= currentTime) {
+      throw new BadRequestException({
+        errors: { message: 'Domain has expired.' },
+      });
+    }
+
+
+    try {
+      // Prepare API URL and headers
+      const headers = {
+        Authorization: `sso-key ${this.godaddyKey}:${this.godaddySecret}`,
+        'Content-Type': 'application/json',
+      };
+      const apiUrl = `${this.godaddyBaseUrl}/v1/domains/${domain.url}/contacts`;
+
+      // Make the request
+      const response = await axios.patch(apiUrl, [updateContactsDto], {
+        headers,
+      });
+
+      // Return DNS records
+      return response.data;
+    } catch (error) {
+      // Handle and log errors
+      if (axios.isAxiosError(error)) {
+        console.error('Error response for updating contact details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+        throw new BadRequestException({
+          errors: {
+            message: `Error updating contacts: ${error.response?.data?.message || 'Unknown error'}`,
+          },
+        });
+      } else {
+        console.error('Unexpected error:', error.message);
+        throw new Error(`Failed to update contacts details  ${domain.url}.`);
       }
     }
   }

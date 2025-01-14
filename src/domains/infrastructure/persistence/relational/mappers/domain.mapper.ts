@@ -12,8 +12,6 @@ export class DomainMapper {
 
     domainEntity.status = raw.status;
 
-    domainEntity.current_highest_bid = raw.current_highest_bid;
-
     domainEntity.status = raw.status;
 
     if (raw.category) {
@@ -22,6 +20,10 @@ export class DomainMapper {
 
     if (raw.current_owner) {
       domainEntity.current_owner = raw.current_owner;
+    }
+
+    if (raw.expiry_date) {
+      domainEntity.expiry_date = raw.expiry_date;
     }
 
     domainEntity.description = raw.description;
@@ -51,6 +53,10 @@ export class DomainMapper {
 
     if (domainEntity.registration_date) {
       persistenceEntity.registration_date = domainEntity.registration_date;
+    }
+
+    if (domainEntity.expiry_date) {
+      persistenceEntity.expiry_date = domainEntity.expiry_date;
     }
 
     if (domainEntity.renewal_price) {

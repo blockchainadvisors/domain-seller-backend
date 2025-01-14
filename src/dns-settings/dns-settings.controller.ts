@@ -22,6 +22,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Request } from '@nestjs/common';
 import { UpdateDnsRecordsDto } from './dto/update-dns-records.dto';
 import { CreateDnsRecordsDto } from './dto/create-dns-records.dto';
+import { UpdateContactsDto } from './dto/update-contacts.dto';
 
 @ApiTags('Dnssettings')
 @ApiBearerAuth()
@@ -154,6 +155,31 @@ export class DnsSettingsController {
       domainId,
       user_id,
       createDnsRecordsDto,
+    );
+  }
+
+
+  @Patch('domains/:domain_id/contacts')
+  @ApiParam({
+    name: 'domain_id',
+    type: String,
+    required: true,
+    description: 'The ID of the domain to update the contacts for',
+  })
+  // @ApiOkResponse({
+  //   type: DnsSettings,
+  //   description: 'Updated DNS settings',
+  // })
+  updateContactDetails(
+    @Param('domain_id') domainId: string,
+    @Body() updateContactsDto: UpdateContactsDto,
+    @Request() req,
+  ) {
+    const user_id: string = req.user?.id;
+    return this.dnsSettingsService.updateContactDetails(
+      domainId,
+      user_id,
+      updateContactsDto,
     );
   }
 }

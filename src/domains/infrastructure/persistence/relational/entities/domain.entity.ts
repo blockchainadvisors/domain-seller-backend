@@ -53,6 +53,12 @@ export class DomainEntity extends EntityRelationalHelper {
 
   @Column({
     nullable: true,
+    type: 'timestamp',
+  })
+  expiry_date?: Date;
+
+  @Column({
+    nullable: true,
     type: 'decimal',
     precision: 18,
     scale: 2,

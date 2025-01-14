@@ -263,6 +263,11 @@ export class PaymentsService {
 
     const currentTime = new Date();
 
+    // Calculate expiry_date
+    const expiryDate = new Date(currentTime);
+    const durationMonths = Number(auction.expiry_duration)|| 1
+    expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+
     // Update payment status and related entities
     await this.paymentRepository.update(payment.id, {
       status: 'PAID',
@@ -277,6 +282,7 @@ export class PaymentsService {
       current_owner: payment.user_id.id,
       registration_date: currentTime,
       renewal_price: auction.current_bid,
+      expiry_date: expiryDate, 
     });
 
     console.log(`Payment ${payment.id} completed successfully.`);
@@ -291,7 +297,7 @@ export class PaymentsService {
     if (!payment) {
       console.error(`Payment with Stripe ID ${paymentObject.id} not found.`);
       return;
-    }
+    } 
 
     const auction = await this.auctionService.findById(payment.auction_id.id);
     if (!auction) {

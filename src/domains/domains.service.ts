@@ -92,7 +92,7 @@ export class DomainsService {
       id,
 
       current_highest_bid: updateDomainDto.current_highest_bid,
-
+ 
       status: updateDomainDto.status,
 
       description: updateDomainDto.description,
@@ -101,6 +101,7 @@ export class DomainsService {
       registration_date: updateDomainDto.registration_date,
       renewal_price: updateDomainDto.renewal_price,
       current_owner: updateDomainDto.current_owner,
+      expiry_date: updateDomainDto.expiry_date
     });
   }
 

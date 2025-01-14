@@ -39,6 +39,13 @@ export class Domain {
   registration_date?: Date;
 
   @ApiProperty({
+    type: Date,
+    nullable: true,
+    format: 'date-time',
+  })
+  expiry_date?: Date;
+
+  @ApiProperty({
     type: () => Number,
     nullable: true,
   })
