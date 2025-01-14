@@ -201,30 +201,61 @@ export class PaymentsService {
     return { payment_url: session.url };
   }
 
+  // async completePayment(req: any, res: any, rawBody: Buffer) {
+  //   const sig = req.headers['stripe-signature'];
+  //   const endpointSecret = this.configService.getOrThrow(
+  //     'payment.stripeEndpointSecret',
+  //     {
+  //       infer: true,
+  //     },
+  //   );
+
+  //   let event: any;
+
+  //   try {
+  //     event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+
+  //     switch (event.type) {
+  //       case 'checkout.session.completed': {
+  //         const paymentObject = event.data.object;
+
+  //         if (paymentObject.payment_status === 'paid') {
+  //           await this.handlePaymentSuccess(paymentObject);
+  //         } else {
+  //           await this.handlePaymentFailure(paymentObject);
+  //         }
+  //         break;
+  //       }
+  //       default:
+  //         console.log(`Unhandled event type ${event.type}`);
+  //         break;
+  //     }
+  //   res.status(200).send();
+  //   } catch (err) {
+  //     // Log any unexpected errors to debug
+  //     res.status(400).send();
+  //     console.error('Error processing event:', err.message);
+  //   }
+
+  
+  // }
   async completePayment(req: any, res: any, rawBody: Buffer) {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = this.configService.getOrThrow(
       'payment.stripeEndpointSecret',
-      {
-        infer: true,
-      },
+      { infer: true },
     );
-
+  
     let event: any;
-
+  
     try {
+      // Attempt to construct the Stripe event
       event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-    } catch (err) {
-      console.error('Webhook signature verification failed.', err.message);
-      // Respond with 200 OK even on signature verification failure to avoid retries from Stripe
-      return res.status(200).send();
-    }
-
-    try {
+  
       switch (event.type) {
         case 'checkout.session.completed': {
           const paymentObject = event.data.object;
-
+  
           if (paymentObject.payment_status === 'paid') {
             await this.handlePaymentSuccess(paymentObject);
           } else {
@@ -236,14 +267,16 @@ export class PaymentsService {
           console.log(`Unhandled event type ${event.type}`);
           break;
       }
+  
+      // Respond with 200 OK after successfully processing the event
+      res.status(200).send();
     } catch (err) {
-      // Log any unexpected errors to debug
+      // Respond with 400 in case of errors
+      res.status(400).send();
       console.error('Error processing event:', err.message);
     }
-
-    // Always respond with 200 OK
-    res.status(200).send();
   }
+  
 
   async handlePaymentSuccess(paymentObject: any) {
     console.log('handlePaymentSuccess');
