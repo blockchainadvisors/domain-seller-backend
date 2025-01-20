@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { DomainsModule } from '../domains/domains.module';
 import { BidsModule } from '../bids/bids.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { DnsSettingsSchedulerService } from './dns-settings.scheduler.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { PaymentsModule } from '../payments/payments.module';
     RelationalDnsSettingsPersistenceModule,
   ],
   controllers: [DnsSettingsController],
-  providers: [DnsSettingsService],
+  providers: [DnsSettingsService, DnsSettingsSchedulerService],
   exports: [DnsSettingsService, RelationalDnsSettingsPersistenceModule],
 })
 export class DnsSettingsModule {}

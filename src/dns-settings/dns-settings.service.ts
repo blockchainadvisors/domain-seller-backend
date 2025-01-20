@@ -241,13 +241,12 @@ export class DnsSettingsService {
         errors: { message: 'Domain expiry date is not set.' },
       });
     }
-    
+
     if (new Date(domain.expiry_date).getTime() <= currentTime) {
       throw new BadRequestException({
         errors: { message: 'Domain has expired.' },
       });
     }
-    
 
     try {
       // Prepare API URL and headers
@@ -378,7 +377,6 @@ export class DnsSettingsService {
       });
     }
 
-
     try {
       // Prepare API URL and headers
       const headers = {
@@ -446,7 +444,6 @@ export class DnsSettingsService {
       });
     }
 
-
     try {
       // Prepare API URL and headers
       const headers = {
@@ -513,7 +510,6 @@ export class DnsSettingsService {
         errors: { message: 'Domain has expired.' },
       });
     }
-
 
     try {
       // Prepare API URL and headers

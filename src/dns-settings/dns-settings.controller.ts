@@ -158,7 +158,6 @@ export class DnsSettingsController {
     );
   }
 
-
   @Patch('domains/:domain_id/contacts')
   @ApiParam({
     name: 'domain_id',

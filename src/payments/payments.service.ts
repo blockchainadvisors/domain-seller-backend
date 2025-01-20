@@ -201,61 +201,23 @@ export class PaymentsService {
     return { payment_url: session.url };
   }
 
-  // async completePayment(req: any, res: any, rawBody: Buffer) {
-  //   const sig = req.headers['stripe-signature'];
-  //   const endpointSecret = this.configService.getOrThrow(
-  //     'payment.stripeEndpointSecret',
-  //     {
-  //       infer: true,
-  //     },
-  //   );
-
-  //   let event: any;
-
-  //   try {
-  //     event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-
-  //     switch (event.type) {
-  //       case 'checkout.session.completed': {
-  //         const paymentObject = event.data.object;
-
-  //         if (paymentObject.payment_status === 'paid') {
-  //           await this.handlePaymentSuccess(paymentObject);
-  //         } else {
-  //           await this.handlePaymentFailure(paymentObject);
-  //         }
-  //         break;
-  //       }
-  //       default:
-  //         console.log(`Unhandled event type ${event.type}`);
-  //         break;
-  //     }
-  //   res.status(200).send();
-  //   } catch (err) {
-  //     // Log any unexpected errors to debug
-  //     res.status(400).send();
-  //     console.error('Error processing event:', err.message);
-  //   }
-
-  
-  // }
   async completePayment(req: any, res: any, rawBody: Buffer) {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = this.configService.getOrThrow(
       'payment.stripeEndpointSecret',
       { infer: true },
     );
-  
+
     let event: any;
-  
+
     try {
       // Attempt to construct the Stripe event
       event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-  
+
       switch (event.type) {
         case 'checkout.session.completed': {
           const paymentObject = event.data.object;
-  
+
           if (paymentObject.payment_status === 'paid') {
             await this.handlePaymentSuccess(paymentObject);
           } else {
@@ -267,7 +229,7 @@ export class PaymentsService {
           console.log(`Unhandled event type ${event.type}`);
           break;
       }
-  
+
       // Respond with 200 OK after successfully processing the event
       res.status(200).send();
     } catch (err) {
@@ -276,10 +238,8 @@ export class PaymentsService {
       console.error('Error processing event:', err.message);
     }
   }
-  
 
   async handlePaymentSuccess(paymentObject: any) {
-    console.log('handlePaymentSuccess');
     const payment = await this.paymentRepository.findByStripeId(
       paymentObject.id,
     );
@@ -298,7 +258,7 @@ export class PaymentsService {
 
     // Calculate expiry_date
     const expiryDate = new Date(currentTime);
-    const durationMonths = Number(auction.expiry_duration)|| 1
+    const durationMonths = Number(auction.expiry_duration) || 1;
     expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
 
     // Update payment status and related entities
@@ -315,7 +275,7 @@ export class PaymentsService {
       current_owner: payment.user_id.id,
       registration_date: currentTime,
       renewal_price: auction.current_bid,
-      expiry_date: expiryDate, 
+      expiry_date: expiryDate,
     });
 
     console.log(`Payment ${payment.id} completed successfully.`);
@@ -330,7 +290,7 @@ export class PaymentsService {
     if (!payment) {
       console.error(`Payment with Stripe ID ${paymentObject.id} not found.`);
       return;
-    } 
+    }
 
     const auction = await this.auctionService.findById(payment.auction_id.id);
     if (!auction) {

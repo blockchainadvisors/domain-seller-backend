@@ -7,6 +7,7 @@ import { Domain } from '../../../../domain/domain';
 import { DomainRepository } from '../../domain.repository';
 import { DomainMapper } from '../mappers/domain.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { CreateDomainDto } from '../../../../dto/create-domain.dto';
 
 @Injectable()
 export class DomainRelationalRepository implements DomainRepository {
@@ -21,6 +22,35 @@ export class DomainRelationalRepository implements DomainRepository {
       this.domainRepository.create(persistenceModel),
     );
     return DomainMapper.toDomain(newEntity);
+  }
+
+  async createManyRaw(data: CreateDomainDto[]): Promise<string> {
+    // Map the formatted data to your persistence models if necessary
+    const persistenceModels = data.map(DomainMapper.toPersistence);
+
+    const queryRunner =
+      this.domainRepository.manager.connection.createQueryRunner();
+
+    try {
+      await queryRunner.startTransaction();
+
+      // Insert the transformed data into the database
+      await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into(DomainEntity)
+        .values(persistenceModels)
+        .orIgnore()
+        .execute();
+
+      await queryRunner.commitTransaction();
+      return 'done';
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findAllWithPagination({

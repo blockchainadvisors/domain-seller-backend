@@ -42,6 +42,7 @@ export class DomainEntity extends EntityRelationalHelper {
   @Column({
     nullable: false,
     type: String,
+    unique: true,
   })
   url: string;
 

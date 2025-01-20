@@ -13,7 +13,10 @@ class AddressMailingDto {
   @IsString()
   address1: string;
 
-  @ApiProperty({ description: 'Street address line 2 (optional)', required: false })
+  @ApiProperty({
+    description: 'Street address line 2 (optional)',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   address2?: string;
@@ -27,7 +30,9 @@ class AddressMailingDto {
   state: string;
 
   @ApiProperty({ description: 'Country (ISO 3166-1 alpha-2)', example: 'US' })
-  @Matches(/^[A-Z]{2}$/, { message: 'Country must be a valid ISO 3166-1 alpha-2 code' })
+  @Matches(/^[A-Z]{2}$/, {
+    message: 'Country must be a valid ISO 3166-1 alpha-2 code',
+  })
   country: string;
 
   @ApiProperty({ description: 'Postal code' })

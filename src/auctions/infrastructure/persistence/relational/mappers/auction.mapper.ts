@@ -37,11 +37,10 @@ export class AuctionMapper {
       domainEntity.winning_bid_id = raw.winning_bid_id;
     }
 
-    
     if (raw.expiry_duration) {
       domainEntity.expiry_duration = raw.expiry_duration;
     }
- 
+
     domainEntity.id = raw.id;
     domainEntity.created_at = raw.created_at;
     domainEntity.updated_at = raw.updated_at;
