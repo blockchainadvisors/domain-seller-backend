@@ -11,6 +11,10 @@ import { Offers } from './domain/offers';
 import { AuctionsService } from '../auctions/auctions.service';
 import { UsersService } from '../users/users.service';
 import { BidsService } from '../bids/bids.service';
+import { PaymentsService } from '../payments/payments.service';
+import { OffersEntity } from './infrastructure/persistence/relational/entities/offers.entity';
+import { DataSource, QueryRunner } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Injectable()
 export class OffersService {
@@ -22,6 +26,8 @@ export class OffersService {
     private readonly bidsService: BidsService,
 
     private readonly auctionService: AuctionsService,
+    private readonly paymentService: PaymentsService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async create(createOffersDto: CreateOffersDto, retrieved_user_id: string) {
@@ -62,13 +68,20 @@ export class OffersService {
       });
     }
 
-    if (
-      (auction_id.end_time && currentTime > auction_id.end_time) ||
-      auction_id.status === 'LEASE_PENDING'
-    ) {
+    if (auction_id.status !== 'ACTIVE' && auction_id.status !== 'DRAFT') {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { auction: 'hasEnded' },
+        errors: {
+          auction_id: 'leaseOngoing',
+          message: 'Auction not available for offer',
+        },
+      });
+    }
+
+    if (auction_id.end_time && currentTime > auction_id.end_time) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: { auction: 'hasEnded', message: 'Auction has ended' },
       });
     }
 
@@ -79,7 +92,10 @@ export class OffersService {
     if (bidsCount > 0) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { auction_id: 'offerNotAvailabe' },
+        errors: {
+          auction_id: 'offerNotAvailabe',
+          message: 'Aucition not available for offer',
+        },
       });
     }
 
@@ -114,6 +130,95 @@ export class OffersService {
 
   findByIds(ids: Offers['id'][]) {
     return this.offersRepository.findByIds(ids);
+  }
+
+  async approveOffer(id: Offers['id']) {
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+
+      // Find the offer to ensure it exists
+      const offer = await this.offersRepository.findById(id);
+
+      if (!offer) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'notExists', message: 'Offer not found' },
+        });
+      }
+      const user_id = await this.userService.findById(offer.user_id.id);
+      const auction_id = await this.auctionService.findById(
+        offer.auction_id.id,
+      );
+
+      if (!user_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'notExists', message: 'user not found' },
+        });
+      }
+
+      if (!auction_id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { auction_id: 'notExists', message: 'auction not found' },
+        });
+      }
+
+      const offerRepository = manager.getRepository(OffersEntity);
+      await offerRepository.update(id, {
+        status: 'APPROVED',
+      });
+
+      // Decline all other offers with the same auctionId
+      // await this.offersRepository.declineOtherOffers(offer.auction_id.id, id);
+      // Decline all other offers for the same auction
+      await manager
+        .createQueryBuilder()
+        .update(OffersEntity)
+        .set({ status: 'DECLINED' })
+        .where('auction_id = :auctionId', { auctionId: auction_id.id })
+        .andWhere('id != :approvedOfferId', { approvedOfferId: id })
+        .execute();
+
+      const createPaymentRecord =
+        await this.paymentService.initiateOfferPayment(
+          auction_id,
+          user_id,
+          offer.offer_amount,
+          offer.auction_id.domain_id.url,
+        );
+      console.log(createPaymentRecord);
+
+      await queryRunner.commitTransaction();
+      return { message: 'Successful' };
+    } catch (error) {
+      // **Rollback the transaction in case of error**
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // **Release the query runner to avoid memory leaks**
+      await queryRunner.release();
+    }
+  }
+
+  async declineOffer(id: Offers['id']) {
+    // Find the offer to ensure it exists
+    const offer = await this.offersRepository.findById(id);
+
+    if (!offer) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: { id: 'notExists', message: 'Offer not found' },
+      });
+    }
+
+    // Decline the offer
+    await this.offersRepository.declineOffer(id);
+    return { message: 'Successful' };
   }
 
   async update(

@@ -29,7 +29,7 @@ export class Offers {
   @Expose() // Expose this field in the transformation
   auction_id: Pick<
     Auction,
-    'id' | 'start_time' | 'end_time' | 'status' | 'current_winner'
+    'id' | 'start_time' | 'end_time' | 'status' | 'current_winner' | 'domain_id'
   >;
 
   @ApiProperty()

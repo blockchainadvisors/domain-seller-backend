@@ -20,6 +20,13 @@ import { AllConfigType } from '../config/config.type';
 import { AuctionsService } from '../auctions/auctions.service';
 import { DomainsService } from '../domains/domains.service';
 import { BidsService } from '../bids/bids.service';
+import { DataSource, QueryRunner } from 'typeorm';
+import { AuctionEntity } from '../auctions/infrastructure/persistence/relational/entities/auction.entity';
+import { PaymentEntity } from './infrastructure/persistence/relational/entities/payment.entity';
+import { DomainEntity } from '../domains/infrastructure/persistence/relational/entities/domain.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { Auction } from '../auctions/domain/auction';
+import { User } from '../users/domain/user';
 
 @Injectable()
 export class PaymentsService {
@@ -33,6 +40,7 @@ export class PaymentsService {
     private mailService: MailService,
     @Inject(forwardRef(() => BidsService))
     private readonly bidsService: BidsService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     (this.stripe = new Stripe(
@@ -260,6 +268,8 @@ export class PaymentsService {
     const expiryDate = new Date(currentTime);
     const durationMonths = Number(auction.expiry_duration) || 1;
     expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+    const renewalPrice =
+      Number(paymentObject.amount_total) / 100 || auction.current_bid;
 
     // Update payment status and related entities
     await this.paymentRepository.update(payment.id, {
@@ -274,7 +284,7 @@ export class PaymentsService {
       status: 'PAYMENT_COMPLETED',
       current_owner: payment.user_id.id,
       registration_date: currentTime,
-      renewal_price: auction.current_bid,
+      renewal_price: renewalPrice,
       expiry_date: expiryDate,
     });
 
@@ -340,5 +350,86 @@ export class PaymentsService {
 
   findByBidId(bidId: string) {
     return this.paymentRepository.findByBidId(bidId);
+  }
+
+  async initiateOfferPayment(
+    auction_id: Auction,
+    user_id: User,
+    amount: number,
+    domainUrl: string,
+  ) {
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+
+      const url = new URL(
+        this.configService.getOrThrow('app.frontendDomain', {
+          infer: true,
+        }),
+      );
+      // Create Stripe session
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'GBP',
+              product_data: {
+                name: `Payment for ${domainUrl}`,
+              },
+              unit_amount: amount * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${url}/payment/success-page`,
+        cancel_url: `${url}/payment/failed-page`,
+      });
+
+      // **Create bid**: Now that user_id, domain_id, and auction_id are resolved, create the bid entity
+      const newPayment = manager.create(PaymentEntity, {
+        user_id: user_id as UserEntity,
+        amount: amount,
+        auction_id: auction_id as AuctionEntity,
+        status: 'PROCESSING',
+        stripe_id: session.id,
+        payment_url: session.url,
+      });
+
+      // Save the new bid
+      await manager.save(newPayment);
+
+      // **Update domain status if it's the first bid**
+      const domainRepository = queryRunner.manager.getRepository(DomainEntity);
+      await domainRepository.update(auction_id.domain_id.id, {
+        status: 'OFFER_PENDING',
+      });
+
+      // **Update domain status if it's the first bid**
+      const auctionRepository =
+        queryRunner.manager.getRepository(AuctionEntity);
+      await auctionRepository.update(auction_id.id, {
+        status: 'OFFER_PENDING',
+        current_bid: amount,
+        current_winner: user_id.id,
+      });
+
+      // **Commit the transaction**
+      await queryRunner.commitTransaction();
+
+      //const getPayment = await this.paymentService.findById(newPayment.id);
+      return { payment_url: session.url };
+    } catch (error) {
+      // **Rollback the transaction in case of error**
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // **Release the query runner to avoid memory leaks**
+      await queryRunner.release();
+    }
   }
 }

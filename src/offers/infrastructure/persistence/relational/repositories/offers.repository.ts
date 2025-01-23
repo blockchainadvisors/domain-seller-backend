@@ -76,4 +76,40 @@ export class OffersRelationalRepository implements OffersRepository {
   async remove(id: Offers['id']): Promise<void> {
     await this.offersRepository.delete(id);
   }
+
+  async approveOffer(id: Offers['id']): Promise<Offers> {
+    const offer = await this.offersRepository.findOne({ where: { id } });
+    if (!offer) {
+      throw new Error('Offer not found');
+    }
+
+    offer.status = 'PROCESSING';
+    return this.offersRepository.save(offer);
+  }
+
+  async declineOtherOffers(
+    auctionId: string,
+    excludeId: Offers['id'],
+  ): Promise<void> {
+    await this.offersRepository
+      .createQueryBuilder()
+      .update(Offers)
+      .set({ status: 'DECLINED' })
+      .where('auction_id = :auctionId AND id != :id', {
+        auctionId,
+        id: excludeId,
+      })
+      .execute();
+  }
+
+  async declineOffer(id: Offers['id']): Promise<Offers> {
+    const offer = await this.offersRepository.findOne({ where: { id } });
+
+    if (!offer) {
+      throw new Error('Offer not found');
+    }
+
+    offer.status = 'DECLINED';
+    return this.offersRepository.save(offer);
+  }
 }

@@ -7,6 +7,7 @@ import { DomainsModule } from '../domains/domains.module';
 import { UsersModule } from '../users/users.module';
 
 import { BidsModule } from '../bids/bids.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { BidsModule } from '../bids/bids.module';
     UsersModule,
     forwardRef(() => BidsModule),
     DomainsModule,
+    PaymentsModule,
   ],
   controllers: [OffersController],
   providers: [OffersService],

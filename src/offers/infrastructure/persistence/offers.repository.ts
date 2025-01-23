@@ -24,4 +24,12 @@ export abstract class OffersRepository {
   ): Promise<Offers | null>;
 
   abstract remove(id: Offers['id']): Promise<void>;
+
+  abstract approveOffer(id: Offers['id']): Promise<Offers>;
+  abstract declineOtherOffers(
+    auction_id: string,
+    id: Offers['id'],
+  ): Promise<void>;
+
+  abstract declineOffer(id: Offers['id']): Promise<Offers>;
 }

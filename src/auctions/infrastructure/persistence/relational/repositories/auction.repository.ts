@@ -115,6 +115,14 @@ export class AuctionRelationalRepository implements AuctionRepository {
       ])
       .where('auction.start_time <= :currentTime', { currentTime: new Date() })
       .andWhere('auction.end_time >= :currentTime', { currentTime: new Date() }) // Active auctions based on time
+      .andWhere(
+        'auction.status = :activeStatus OR auction.status = :draftStatus ',
+        { activeStatus: 'ACTIVE', draftStatus: 'DRAFT' },
+      )
+      .andWhere(
+        'auction.status = :activeStatus OR auction.status = :draftStatus ',
+        { activeStatus: 'ACTIVE', draftStatus: 'DRAFT' },
+      )
       .groupBy('auction.id, domain.id')
       .orderBy('auction.end_time', 'ASC') // Optional: Order by end_time or any other field
       .skip(skip)
@@ -126,6 +134,10 @@ export class AuctionRelationalRepository implements AuctionRepository {
       .createQueryBuilder('auction')
       .where('auction.start_time <= :currentTime', { currentTime: new Date() })
       .andWhere('auction.end_time >= :currentTime', { currentTime: new Date() }) // Total count based on time
+      .andWhere(
+        'auction.status = :activeStatus OR auction.status = :draftStatus ',
+        { activeStatus: 'ACTIVE', draftStatus: 'DRAFT' },
+      )
       .getCount();
 
     return {

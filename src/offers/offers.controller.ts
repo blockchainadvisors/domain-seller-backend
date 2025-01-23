@@ -93,9 +93,23 @@ export class OffersController {
     return this.offersService.findById(id);
   }
 
-  @Patch(':id')
+  @Patch('approve/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  approveOffer(@Param('id') id: string) {
+    return this.offersService.approveOffer(id);
+  }
+
+  @Patch('decline/:id')
+  @ApiBearerAuth()
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -104,8 +118,8 @@ export class OffersController {
   @ApiOkResponse({
     type: Offers,
   })
-  update(@Param('id') id: string, @Body() updateOffersDto: UpdateOffersDto) {
-    return this.offersService.update(id, updateOffersDto);
+  declineOffer(@Param('id') id: string) {
+    return this.offersService.declineOffer(id);
   }
 
   @Delete(':id')

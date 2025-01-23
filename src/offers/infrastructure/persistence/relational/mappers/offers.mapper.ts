@@ -35,6 +35,13 @@ export class OffersMapper {
         end_time: auction.end_time,
         status: auction.status,
         current_winner: auction.current_winner,
+        domain_id: {
+          id: auction.domain_id.id,
+          status: auction.domain_id.status,
+          url: auction.domain_id.url,
+          created_at: auction.domain_id.created_at,
+          updated_at: auction.domain_id.updated_at,
+        },
       };
     }
 

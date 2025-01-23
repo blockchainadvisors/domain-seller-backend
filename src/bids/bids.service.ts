@@ -982,6 +982,8 @@ export class BidsService {
         case 'ENDED':
         case 'LEASE_PENDING':
           auction_status = 'ENDED';
+        case 'OFFER_PENDING':
+          auction_status = 'ENDED';
           break;
         case 'PAYMENT_PROCESSING':
         case 'PAYMENT_PENDING':
