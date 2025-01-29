@@ -5,6 +5,7 @@ import {
   forwardRef,
   HttpStatus,
   Inject,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
@@ -120,78 +121,135 @@ export class AuctionsService {
     return this.auctionRepository.findByIds(ids);
   }
 
+  // async update(id: Auction['id'], updateAuctionDto: UpdateAuctionDto) {
+  //   // // Fetch the existing auction
+  //   // const auction = await this.auctionRepository.findById(id);
+
+  //   // if (!auction) {
+  //   //   throw new NotFoundException({
+  //   //     status: HttpStatus.NOT_FOUND,
+  //   //     error: 'Auction not found',
+  //   //   });
+  //   // }
+
+  //   // const currentDate = new Date();
+
+  //   // // Check if the auction has ended
+  //   // if (currentDate >= auction.end_time) {
+  //   //   throw new BadRequestException({
+  //   //     status: HttpStatus.BAD_REQUEST,
+  //   //     error: 'Cannot modify an auction that has already ended',
+  //   //   });
+  //   // }
+
+  //   // // If the auction has started, restrict some fields
+  //   // if (currentDate >= auction.start_time) {
+  //   //   // Cannot modify start_time and reserve_price after auction starts
+  //   //   if (
+  //   //     updateAuctionDto.start_time &&
+  //   //     updateAuctionDto.start_time !== auction.start_time
+  //   //   ) {
+  //   //     throw new BadRequestException({
+  //   //       status: HttpStatus.BAD_REQUEST,
+  //   //       error: 'Cannot modify start_time after the auction has started',
+  //   //     });
+  //   //   }
+
+  //   //   if (
+  //   //     updateAuctionDto.reserve_price &&
+  //   //     updateAuctionDto.reserve_price !== auction.reserve_price
+  //   //   ) {
+  //   //     throw new BadRequestException({
+  //   //       status: HttpStatus.BAD_REQUEST,
+  //   //       error: 'Cannot modify reserve_price after the auction has started',
+  //   //     });
+  //   //   }
+  //   // }
+
+  //   // // Handle domain_id update if provided
+  //   // let domain_id: Domain | undefined = undefined;
+  //   // if (updateAuctionDto.domain_id) {
+  //   //   const domain_idObject = await this.domainService.findById(
+  //   //     updateAuctionDto.domain_id,
+  //   //   );
+  //   //   if (!domain_idObject) {
+  //   //     throw new UnprocessableEntityException({
+  //   //       status: HttpStatus.UNPROCESSABLE_ENTITY,
+  //   //       errors: {
+  //   //         domain_id: 'notExists',
+  //   //       },
+  //   //     });
+  //   //   }
+  //   //   domain_id = domain_idObject;
+  //   // }
+
+  //   // Proceed with updating the auction
+  //   return this.auctionRepository.update(id, {
+  //     min_increment: updateAuctionDto.min_increment,
+  //     reserve_price: updateAuctionDto.reserve_price,
+  //     end_time: updateAuctionDto.end_time,
+  //     start_time: updateAuctionDto.start_time,
+  //     lease_price:updateAuctionDto.lease_price,
+  //     expiry_duration: updateAuctionDto.expiry_duration,
+  //     // domain_id: domain_id || auction.domain_id,
+  //     min_price: updateAuctionDto.min_price,
+  //   });
+  // }
+
   async update(id: Auction['id'], updateAuctionDto: UpdateAuctionDto) {
-    // // Fetch the existing auction
-    // const auction = await this.auctionRepository.findById(id);
+    // Fetch the existing auction
+    const auction = await this.auctionRepository.findById(id);
 
-    // if (!auction) {
-    //   throw new NotFoundException({
-    //     status: HttpStatus.NOT_FOUND,
-    //     error: 'Auction not found',
-    //   });
-    // }
+    if (!auction) {
+        throw new NotFoundException({
+            status: HttpStatus.NOT_FOUND,
+            error: 'Auction not found',
+        });
+    }
 
-    // const currentDate = new Date();
+    const currentDate = new Date();
 
-    // // Check if the auction has ended
-    // if (currentDate >= auction.end_time) {
-    //   throw new BadRequestException({
-    //     status: HttpStatus.BAD_REQUEST,
-    //     error: 'Cannot modify an auction that has already ended',
-    //   });
-    // }
+    // Check if the auction has ended
+    if (currentDate >= auction.end_time) {
+        throw new BadRequestException({
+            status: HttpStatus.BAD_REQUEST,
+            error: 'Cannot modify an auction that has already ended',
+        });
+    }
 
-    // // If the auction has started, restrict some fields
-    // if (currentDate >= auction.start_time) {
-    //   // Cannot modify start_time and reserve_price after auction starts
-    //   if (
-    //     updateAuctionDto.start_time &&
-    //     updateAuctionDto.start_time !== auction.start_time
-    //   ) {
-    //     throw new BadRequestException({
-    //       status: HttpStatus.BAD_REQUEST,
-    //       error: 'Cannot modify start_time after the auction has started',
-    //     });
-    //   }
+    // Check if the auction has started
+    const hasStarted = currentDate >= auction.start_time;
 
-    //   if (
-    //     updateAuctionDto.reserve_price &&
-    //     updateAuctionDto.reserve_price !== auction.reserve_price
-    //   ) {
-    //     throw new BadRequestException({
-    //       status: HttpStatus.BAD_REQUEST,
-    //       error: 'Cannot modify reserve_price after the auction has started',
-    //     });
-    //   }
-    // }
+    // If the auction has started, restrict updates to start_time and min_price
+    if (hasStarted) {
+        if (updateAuctionDto.start_time && updateAuctionDto.start_time !== auction.start_time) {
+            throw new BadRequestException({
+                status: HttpStatus.BAD_REQUEST,
+                error: 'Cannot modify start_time after the auction has started',
+            });
+        }
 
-    // // Handle domain_id update if provided
-    // let domain_id: Domain | undefined = undefined;
-    // if (updateAuctionDto.domain_id) {
-    //   const domain_idObject = await this.domainService.findById(
-    //     updateAuctionDto.domain_id,
-    //   );
-    //   if (!domain_idObject) {
-    //     throw new UnprocessableEntityException({
-    //       status: HttpStatus.UNPROCESSABLE_ENTITY,
-    //       errors: {
-    //         domain_id: 'notExists',
-    //       },
-    //     });
-    //   }
-    //   domain_id = domain_idObject;
-    // }
+        if (updateAuctionDto.min_price && updateAuctionDto.min_price !== auction.min_price) {
+            throw new BadRequestException({
+                status: HttpStatus.BAD_REQUEST,
+                error: 'Cannot modify min_price after the auction has started',
+            });
+        }
+    }
+
+ 
 
     // Proceed with updating the auction
     return this.auctionRepository.update(id, {
-      min_increment: updateAuctionDto.min_increment,
-      reserve_price: updateAuctionDto.reserve_price,
-      end_time: updateAuctionDto.end_time,
-      start_time: updateAuctionDto.start_time,
-      // domain_id: domain_id || auction.domain_id,
-      min_price: updateAuctionDto.min_price,
+        min_increment: updateAuctionDto.min_increment,
+        reserve_price: updateAuctionDto.reserve_price,
+        end_time: updateAuctionDto.end_time,
+        start_time: hasStarted ? auction.start_time : updateAuctionDto.start_time, // Prevent updating start_time if auction has started
+        lease_price: updateAuctionDto.lease_price,
+        expiry_duration: updateAuctionDto.expiry_duration,
+        min_price: hasStarted ? auction.min_price : updateAuctionDto.min_price, // Prevent updating min_price if auction has started
     });
-  }
+}
 
   remove(id: Auction['id']) {
     return this.auctionRepository.remove(id);
